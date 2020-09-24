@@ -18,7 +18,8 @@
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toBottomOf="@+id/destText"
         map:layout_constraintVertical_bias="1.0"
-        tools:context=".MapsActivity" />
+        tools:context=".MapsActivity"
+        tools:layout="@layout/activity_maps" />
 
     <TextView
         android:id="@+id/destText"
@@ -34,7 +35,7 @@
         android:id="@+id/originText"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:text="@string/originPromp"
+        android:text="@string/originPrompt"
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent" />
@@ -48,7 +49,8 @@
         android:layout_marginBottom="16dp"
         map:layout_constraintBottom_toBottomOf="@+id/map"
         map:layout_constraintStart_toStartOf="@+id/map"
-        map:srcCompat="@drawable/common_full_open_on_phone" />
+        map:srcCompat="@drawable/common_full_open_on_phone"
+        android:contentDescription="TODO" />
 
     <ImageButton
         android:id="@+id/weatherButton"
@@ -59,7 +61,8 @@
         android:layout_marginBottom="16dp"
         map:layout_constraintBottom_toBottomOf="parent"
         map:layout_constraintEnd_toEndOf="parent"
-        map:srcCompat="@drawable/common_full_open_on_phone" />
+        map:srcCompat="@drawable/common_full_open_on_phone"
+        android:contentDescription="TODO" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,11 +8,14 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -34,6 +37,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        ImageButton weatherButton = findViewById(R.id.weatherButton);
+        ImageButton menuButton = findViewById(R.id.menuButton);
+
+        weatherButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MapsActivity.this, "weatherButton click", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        menuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MapsActivity.this, "menuButton click", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
@@ -65,31 +85,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.getUiSettings().setAllGesturesEnabled(true);
 
         Location prevLoc = prevKnownLocation();
-        LatLng prevLatLng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
+        LatLng prevLatLng = null;
+        if (prevLoc != null) {
+            prevLatLng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
+        } else {
+            Toast.makeText(MapsActivity.this, "location information unavailable,\nusing default location", Toast.LENGTH_SHORT);
+            prevLatLng = new LatLng(1.290270, 103.851959);
+        }
 //        LatLng sydney = new LatLng(-34, 151);
 //        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(prevLatLng, 15.0f));
     }
 
+    @SuppressLint("MissingPermission")
     public Location prevKnownLocation() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        @SuppressLint("MissingPermission") Location gpsLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        @SuppressLint("MissingPermission") Location networkLoc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        Location gpsLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location networkLoc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
         long gpsLocRecent = 0;
         long networkLocRecent = 0;
 
-        if (gpsLoc != null) {
-            gpsLocRecent = gpsLoc.getTime();
-        }
-        if (null != networkLoc) {
-            networkLocRecent = networkLoc.getTime();
-        }
+        gpsLocRecent = (gpsLoc != null) ? gpsLoc.getTime() : Long.MIN_VALUE;
+        networkLocRecent = (null != networkLoc) ? networkLoc.getTime() : Long.MIN_VALUE;
          // return the location of the more recently available location
         if (gpsLocRecent>networkLocRecent) {
             return gpsLoc;
-        } else {
+        } else if (networkLoc != null){
             return networkLoc;
+        } else {
+            return null;
         }
     }
 }
