@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Home">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/homeBG"
+            android:layout_width="400dp"
+            android:layout_height="800dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/nikola_topic_1" />
+
+        <ImageView
+            android:id="@+id/homeBL"
+            android:layout_width="400dp"
+            android:layout_height="800dp"
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/rectangle_1" />
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="160dp"
+            app:srcCompat="@drawable/logo" />
+
+        <TextView
+            android:id="@+id/appName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="327dp"
+            android:gravity="center"
+            android:shadowColor="#000000"
+            android:text="ABC"
+            android:textAlignment="center"
+            android:textColor="#F1F0F0"
+            android:textSize="80sp" />
+
+        <ImageButton
+            android:id="@+id/startBtn"
+            android:layout_width="391dp"
+            android:layout_height="266dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="false"
+            android:layout_marginStart="0dp"
+            android:layout_marginLeft="0dp"
+            android:layout_marginTop="480dp"
+            android:layout_marginBottom="90dp"
+            android:background="#00FFFFFF"
+            android:gravity="center"
+            android:textAlignment="center"
+            app:srcCompat="@drawable/startbtn" />
+
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
