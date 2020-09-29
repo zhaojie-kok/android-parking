@@ -9,5 +9,6 @@
         android:drawable="@drawable/common_google_signin_btn_icon_light_normal"/>
     <!--        android:drawable="@drawable/pressed menu"/>-->
     <item
-        android:drawable="@drawable/common_full_open_on_phone" />
+        android:src="@drawable/menu"
+        android:background="#00FFFFFF"/>
 </selector>

@@ -8,29 +8,34 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-
+    private FusedLocationProviderClient fusedLocationClient;
+    private Location prevLoc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -38,6 +43,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+         // make buttons
         ImageButton weatherButton = findViewById(R.id.weatherButton);
         ImageButton menuButton = findViewById(R.id.menuButton);
 
@@ -54,6 +60,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.makeText(MapsActivity.this, "menuButton click", Toast.LENGTH_SHORT).show();
             }
         });
+
+        // make fused location client
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
     /**
@@ -84,12 +93,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setAllGesturesEnabled(true);
 
-        Location prevLoc = prevKnownLocation();
+//        Location prevLoc = prevKnownLocation();
+        Task getLoc = fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    // Got last known location. In some rare situations this can be null.
+                    prevLoc = location;
+                }
+            });
         LatLng prevLatLng = null;
         if (prevLoc != null) {
             prevLatLng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
         } else {
-            Toast.makeText(MapsActivity.this, "location information unavailable,\nusing default location", Toast.LENGTH_SHORT);
             prevLatLng = new LatLng(1.290270, 103.851959);
         }
 //        LatLng sydney = new LatLng(-34, 151);
@@ -99,7 +114,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @SuppressLint("MissingPermission")
     public Location prevKnownLocation() {
+        // make location manager and get current location
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (android.location.LocationListener) this);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, (android.location.LocationListener) this);
+
         Location gpsLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         Location networkLoc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
