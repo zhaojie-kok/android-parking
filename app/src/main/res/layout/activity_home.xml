@@ -62,12 +62,18 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
+            android:adjustViewBounds="true"
             android:background="#00FFFFFF"
             android:gravity="center_horizontal"
-            android:textAlignment="center"
             android:scaleType="centerInside"
-            android:adjustViewBounds="true"
+            android:textAlignment="center"
             app:srcCompat="@drawable/startbtn" />
+
+        <ImageButton
+            android:id="@+id/notifBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_baseline_notifications_24" />
 
 
     </RelativeLayout>
