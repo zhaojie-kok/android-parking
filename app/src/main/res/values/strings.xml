@@ -14,4 +14,8 @@
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
+
+    <string name="currentWeather">Current Weather Conditions</string>
+    <string name="predictWeather">Predicted Weather Conditions</string>
+
 </resources>

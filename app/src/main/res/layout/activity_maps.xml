@@ -26,7 +26,8 @@
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintStart_toStartOf="parent"
             tools:context=".MapsActivity"
-            tools:layout="@layout/activity_maps" />
+            tools:layout="@layout/activity_maps" >
+        </androidx.fragment.app.FragmentContainerView>
 
         <TextView
             android:id="@+id/destText"
@@ -72,12 +73,25 @@
             map:layout_constraintEnd_toEndOf="@+id/map"
             android:src="@drawable/weatherbtn"
             android:background="@null" />
+
+        <ImageButton
+            android:id="@+id/locationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="16dp"
+            map:layout_constraintEnd_toEndOf="@+id/map"
+            map:layout_constraintTop_toTopOf="@+id/map"
+            android:src="@drawable/location_button"
+            android:background="@null"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity='start'
+        android:layout_gravity='left'
         map:menu="@menu/menu_layout"
         />
 
