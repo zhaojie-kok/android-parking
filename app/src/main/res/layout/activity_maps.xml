@@ -19,8 +19,8 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="100dp"
-            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="120dp"
+            android:layout_marginHorizontal="0dp"
             map:layout_constraintTop_toBottomOf="@id/destText"
             map:layout_constraintBottom_toBottomOf="parent"
             map:layout_constraintEnd_toEndOf="parent"
@@ -29,50 +29,55 @@
             tools:layout="@layout/activity_maps" >
         </androidx.fragment.app.FragmentContainerView>
 
-        <TextView
+        <EditText
             android:id="@+id/destText"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="@string/destPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:background="@drawable/search2"
+            android:paddingLeft="35dp"
             map:layout_constraintEnd_toEndOf="parent"
-            map:layout_constraintHorizontal_bias="0.0"
             map:layout_constraintStart_toStartOf="parent"
             map:layout_constraintTop_toBottomOf="@+id/originText" />
 
-        <TextView
+        <EditText
             android:id="@+id/originText"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="@string/originPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/search1"
+            android:paddingLeft="35dp"
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintStart_toStartOf="parent"
-            map:layout_constraintTop_toTopOf="parent" />
+            map:layout_constraintTop_toTopOf="parent"
+            map:layout_constraintBottom_toTopOf="@id/destText"/>
 
         <ImageButton
             android:id="@+id/menuButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:paddingLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginBottom="2dp"
+            android:background="@null"
             android:contentDescription="TODO"
-            map:layout_constraintBottom_toBottomOf="@+id/map"
-            map:layout_constraintStart_toStartOf="@+id/map"
+            android:scaleType="fitCenter"
             android:src="@drawable/menu"
-            android:background="@null" />
+            map:layout_constraintBottom_toBottomOf="@+id/map"
+            map:layout_constraintStart_toStartOf="@+id/map" />
 
         <ImageButton
             android:id="@+id/weatherButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:background="@null"
             android:contentDescription="TODO"
-            map:layout_constraintBottom_toBottomOf="@+id/map"
-            map:layout_constraintEnd_toEndOf="@+id/map"
+            android:scaleType="fitCenter"
             android:src="@drawable/weatherbtn"
-            android:background="@null" />
+            map:layout_constraintBottom_toBottomOf="@+id/map"
+            map:layout_constraintEnd_toEndOf="parent" />
 
         <ImageButton
             android:id="@+id/locationButton"
@@ -85,6 +90,8 @@
             map:layout_constraintTop_toTopOf="@+id/map"
             android:src="@drawable/location_button"
             android:background="@null"/>
+            map:layout_constraintBottom_toBottomOf="@+id/map"
+            map:layout_constraintEnd_toEndOf="@+id/map" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
