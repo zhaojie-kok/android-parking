@@ -15,7 +15,16 @@
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
 
+    <string name="notif_location">Location</string>
+    <string name="notif_name">Name</string>
+    <string name="notif_date">Datetime</string>
+    <string name="notif_title">Edit notification</string>
+    <string name="notif_hint">None</string>
+    <string name="notif_arrival">Arrival time</string>
+    <string name="title_carpark">Carparks</string>
+    <string name="title_notification">Notifications</string>
+    <string name="notif_ID">ID</string>
+  
     <string name="currentWeather">Current Weather Conditions</string>
     <string name="predictWeather">Predicted Weather Conditions</string>
-
 </resources>
