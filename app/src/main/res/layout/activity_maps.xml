@@ -19,65 +19,116 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="100dp"
-            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="120dp"
+            android:layout_marginHorizontal="0dp"
             map:layout_constraintTop_toBottomOf="@id/destText"
             map:layout_constraintBottom_toBottomOf="parent"
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintStart_toStartOf="parent"
             tools:context=".MapsActivity"
-            tools:layout="@layout/activity_maps" />
+            tools:layout="@layout/activity_maps" >
+        </androidx.fragment.app.FragmentContainerView>
 
-        <TextView
-            android:id="@+id/destText"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="@string/destPrompt"
-            map:layout_constraintEnd_toEndOf="parent"
-            map:layout_constraintHorizontal_bias="0.0"
-            map:layout_constraintStart_toStartOf="parent"
-            map:layout_constraintTop_toBottomOf="@+id/originText" />
-
-        <TextView
+        <EditText
             android:id="@+id/originText"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
             android:text="@string/originPrompt"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/search1"
+            android:paddingLeft="35dp"
+            android:paddingRight="50dp"
+            android:singleLine="true"
+            android:gravity="center_vertical"
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintStart_toStartOf="parent"
-            map:layout_constraintTop_toTopOf="parent" />
+            map:layout_constraintTop_toTopOf="parent"
+            map:layout_constraintBottom_toTopOf="@id/destText"
+            tools:ignore="RtlHardcoded" />
+
+        <EditText
+            android:id="@+id/destText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:text="@string/destPrompt"
+            android:scrollHorizontally="true"
+            android:ellipsize="start"
+            android:background="@drawable/search2"
+            android:paddingLeft="35dp"
+            android:paddingRight="50dp"
+            android:singleLine="true"
+            android:gravity="center_vertical"
+            map:layout_constraintEnd_toEndOf="parent"
+            map:layout_constraintStart_toStartOf="parent"
+            map:layout_constraintTop_toBottomOf="@+id/originText"
+            tools:ignore="RtlHardcoded" />
+
+        <ImageButton
+            android:id="@+id/originSearch"
+            android:layout_width="50dp"
+            android:layout_height="45dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginRight="5dp"
+            android:background="?selectableItemBackgroundBorderless"
+            map:layout_constraintBottom_toBottomOf="@+id/originText"
+            map:layout_constraintEnd_toEndOf="@id/originText"
+            map:layout_constraintTop_toTopOf="@+id/originText" />
+
+        <ImageButton
+            android:id="@+id/destSearch"
+            android:layout_width="50dp"
+            android:layout_height="45dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginRight="5dp"
+            android:background="?selectableItemBackgroundBorderless"
+            map:layout_constraintBottom_toBottomOf="@id/destText"
+            map:layout_constraintEnd_toEndOf="@id/destText"
+            map:layout_constraintTop_toTopOf="@+id/destText" />
 
         <ImageButton
             android:id="@+id/menuButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="TODO"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginBottom="2dp"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/menu"
             map:layout_constraintBottom_toBottomOf="@+id/map"
             map:layout_constraintStart_toStartOf="@+id/map"
-            android:src="@drawable/menu"
-            android:background="@null" />
+            tools:ignore="ContentDescription" />
 
         <ImageButton
             android:id="@+id/weatherButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/weatherbtn"
+            map:layout_constraintBottom_toBottomOf="@+id/map"
+            map:layout_constraintEnd_toEndOf="parent"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/locationButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginEnd="16dp"
             android:layout_marginRight="16dp"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="TODO"
-            map:layout_constraintBottom_toBottomOf="@+id/map"
+            android:layout_marginTop="16dp"
             map:layout_constraintEnd_toEndOf="@+id/map"
-            android:src="@drawable/weatherbtn"
-            android:background="@null" />
+            map:layout_constraintTop_toTopOf="@+id/map"
+            android:src="@drawable/location_button"
+            android:background="@null"
+            tools:ignore="ContentDescription" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity='start'
+        android:layout_gravity='left'
         map:menu="@menu/menu_layout"
         />
 

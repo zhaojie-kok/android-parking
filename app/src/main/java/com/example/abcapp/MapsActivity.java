@@ -1,139 +1,364 @@
 package com.example.abcapp;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.Image;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.PopupWindow;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.navigation.NavigationView;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    // Boundary classes and helpers
     private GoogleMap mMap;
+    private RequestQueue requestQueue;
+    private APICaller caller;
+
+    // Entity Classes
+    private Weather weather;
+
+    // for user address input
+    private EditText originText;
+    private EditText destText;
+    private String startText;
+    private String endText;
+    private LatLng startPt = null;
+    private LatLng endPt = null;
+    private ImageButton startSearch;
+    private ImageButton destSearch;
+    private ABCMarker startMarker;
+    private ABCMarker endMarker;
+
+    // for getting location
+    private ImageButton locationButton;
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
     private FusedLocationProviderClient fusedLocationClient;
+    private boolean trackingLocation = false;
     private Location prevLoc;
+
+    // for menu drawer
+    ImageButton menuButton;
+    private DrawerLayout drawer;
+    private NavigationView navView;
+
+    // for weather pop up
+    ImageButton weatherButton;
+    Button weatherClose;
+    private PopupWindow weather_popup;
+    private AlertDialog.Builder dialogBuilder;
+    private AlertDialog dialog;
+    private TextView currWeather, predWeather;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
+        // set up map and location relevant objects
+        // Obtain the SupportMapFragment
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-         // make buttons
-        ImageButton weatherButton = findViewById(R.id.weatherButton);
-        ImageButton menuButton = findViewById(R.id.menuButton);
+        /* make request queue and API caller for http API calls */
+        requestQueue = Volley.newRequestQueue(this);
+        caller = new APICaller(requestQueue);
+
+        /* make fused location client, requests and callbacks */
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult != null) {
+                    // TODO: remove this before deployment
+                    // Toast.makeText(MapsActivity.this, locationResult.toString(), Toast.LENGTH_SHORT).show();
+                    return;
+                } else {
+                    Toast.makeText(MapsActivity.this, "no loc", Toast.LENGTH_SHORT).show();
+                }
+                // find a valid result in the returned location results to use
+                for (Location location : locationResult.getLocations()) {
+                    if (location != null) {
+                        prevLoc = location;
+                    }
+                }
+            }
+        };
+        /* make fused location client, requests and callbacks */
+
+        /* make popup window for weather */
+        weather_popup = new PopupWindow();
+
+        /* make menu layout and views */
+        drawer = (DrawerLayout) findViewById(R.id.drawerLayout);
+        navView = (NavigationView) findViewById(R.id.navView);
+        /* make menu layout and views */
+
+        /* make text input boxes */
+        originText = findViewById(R.id.originText);
+        destText = findViewById(R.id.destText);
+
+        // allow entire text to be selected when the text box is selected
+        originText.setSelectAllOnFocus(true);
+        destText.setSelectAllOnFocus(true);
+        /* make text input boxes */
+
+        /* make simple buttons */
+        startSearch = findViewById(R.id.originSearch);
+        destSearch = findViewById(R.id.destSearch);
+        weatherButton = findViewById(R.id.weatherButton);
+        menuButton = findViewById(R.id.menuButton);
+        locationButton = findViewById(R.id.locationButton);
 
         weatherButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MapsActivity.this, "weatherButton click", Toast.LENGTH_SHORT).show();
+                createWeatherPopup();
             }
         });
 
         menuButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MapsActivity.this, "menuButton click", Toast.LENGTH_SHORT).show();
+                drawer.openDrawer(Gravity.LEFT);
             }
         });
 
-        // make fused location client
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        locationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MapsActivity.this, "finding location", Toast.LENGTH_SHORT).show();
+                getLocation(true);
+            }
+        });
+        /* make buttons */
+
+
+        /* functionality for complex buttons */
+        // the search button for the start location
+        startSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                JSONObject jsonRes = null;
+                LatLng newStartPt = null;
+                startText = originText.getText().toString();
+                try {
+                    jsonRes = caller.getCoords(startText);
+                    // store the result in newStartPt instead of startPt in case the result is invalid
+                    newStartPt = new LatLng(jsonRes.getDouble("lat"), jsonRes.getDouble("lng"));
+                } catch (Exception e) {
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                    e.printStackTrace();
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                    Toast.makeText(MapsActivity.this, "invalid start location", Toast.LENGTH_SHORT).show();
+                    return; // exit if API call was unsuccessful
+                }
+
+                if (newStartPt != null) {
+                    startPt = newStartPt;
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(startPt);
+                    try {
+                        // use the user's input as the title for the marker and the actual address as description
+                        markerOptions.title(startText);
+                        startText = jsonRes.getString("formatted_address");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    startMarker = new ABCMarker(markerOptions, startText, jsonRes);
+                    startMarker.showMarker(mMap);
+
+                    // adjust the camera
+                    if (endMarker != null && endMarker.isShown()) {
+                        LatLngBounds mapBounds = new LatLngBounds(startPt, endPt);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 2));
+                    } else {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startMarker.getLatLng(), 15.0f));
+                    }
+                } else {
+                    // display error message if the new start point is null
+                    Toast.makeText(MapsActivity.this, "invalid location", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+
+        // the search button for the destination location
+        destSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                JSONObject jsonRes = null;
+                LatLng newDestPt = null;
+                endText = destText.getText().toString();
+                try {
+                    jsonRes = caller.getCoords(endText);
+                    // store result in newDestPt instead of destPt in case result is invalid
+                    newDestPt = new LatLng(jsonRes.getDouble("lat"), jsonRes.getDouble("lng"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(MapsActivity.this, "invalid end location", Toast.LENGTH_SHORT).show();
+                    return; // exit if API call was unsuccessful
+                }
+
+                if (newDestPt != null) {
+                    endPt = newDestPt;
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(endPt);
+                    try {
+                        // use the user's input as the title for the marker and the actual address as description
+                        markerOptions.title(endText);
+                        endText = jsonRes.getString("formatted_address");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    endMarker = new ABCMarker(markerOptions, endText, jsonRes);
+                    endMarker.showMarker(mMap);
+
+                    // adjust the camera
+                    if (startMarker != null && startMarker.isShown()) {
+                        LatLngBounds mapBounds = new LatLngBounds(startPt, endPt);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 2));
+                    } else {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(endMarker.getLatLng(), 15.0f));
+                    }
+                } else {
+                    // display error message if the new start point is null
+                    Toast.makeText(MapsActivity.this, "invalid end location", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+        /* functionality for complex buttons */
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        // request permissions for user location
         int fine_loc_permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         if (fine_loc_permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             return;
         }
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int height = displayMetrics.heightPixels;
-        System.out.println("height=" + height);
-
-//        mMap.setPadding(0, height-400, 0, 0);
-        mMap.setMyLocationEnabled(true);
+        // enable map gestures like zoom and sliding
         mMap.getUiSettings().setAllGesturesEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.setMyLocationEnabled(true);
 
-//        Location prevLoc = prevKnownLocation();
-        Task getLoc = fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    // Got last known location. In some rare situations this can be null.
-                    prevLoc = location;
-                }
-            });
-        LatLng prevLatLng = null;
-        if (prevLoc != null) {
-            prevLatLng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
-        } else {
-            prevLatLng = new LatLng(1.290270, 103.851959);
-        }
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(prevLatLng, 15.0f));
+        // request for location updates and shift map camera
+        getLocation(true);
+//        Toast.makeText(this, prevLoc.toString(), Toast.LENGTH_SHORT).show();
     }
 
-    @SuppressLint("MissingPermission")
-    public Location prevKnownLocation() {
-        // make location manager and get current location
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (android.location.LocationListener) this);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, (android.location.LocationListener) this);
-
-        Location gpsLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        Location networkLoc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-        long gpsLocRecent = 0;
-        long networkLocRecent = 0;
-
-        gpsLocRecent = (gpsLoc != null) ? gpsLoc.getTime() : Long.MIN_VALUE;
-        networkLocRecent = (null != networkLoc) ? networkLoc.getTime() : Long.MIN_VALUE;
-         // return the location of the more recently available location
-        if (gpsLocRecent>networkLocRecent) {
-            return gpsLoc;
-        } else if (networkLoc != null){
-            return networkLoc;
-        } else {
-            return null;
+    // getting location from fusedLocationClient
+    public void getLocation(final boolean moveCam) {
+        if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MapsActivity.this, new String[]
+                    {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return;
         }
+
+        if (!trackingLocation) {
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
+            trackingLocation = true;
+            getLocation(moveCam);
+        } else {
+            Task<Location> locationTask = fusedLocationClient.getLastLocation();
+            locationTask.addOnSuccessListener(MapsActivity.this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location != null) {
+                        prevLoc = location;
+                        if (moveCam) {
+                            LatLng prevLatlng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(prevLatlng, 15.0f));
+                        }
+                    } else {
+                        trackingLocation = false;
+                        Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+    }
+
+    // method to display weather popup
+    public void createWeatherPopup() {
+        dialogBuilder = new AlertDialog.Builder(this);
+        final View weatherPopup = getLayoutInflater().inflate(R.layout.weather_popup, null);
+
+        // instantiate the weather texts
+        currWeather = (TextView) weatherPopup.findViewById(R.id.weatherInfoNow);
+        predWeather = (TextView) weatherPopup.findViewById(R.id.weatherInfoForecast);
+
+        // instantiate the close button
+        weatherClose = (Button) weatherPopup.findViewById(R.id.closePopup);
+        weatherPopup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+
+        // display the pop up
+        dialogBuilder.setView(weatherPopup);
+        dialog = dialogBuilder.create();
+        dialog.show();
     }
 }
