@@ -5,7 +5,7 @@
     android:orientation="horizontal">
 
     <TextView
-        android:id="@+id/item_icon"
+        android:id="@+id/search_icon"
         android:layout_width="20dp"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
@@ -15,7 +15,7 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/item_name"
+        android:id="@+id/search_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"

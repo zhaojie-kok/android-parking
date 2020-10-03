@@ -16,13 +16,13 @@
     <string name="menu_slideshow">Slideshow</string>
 
     <!-- to delete/change-->
-    <string name="location">Location</string>
-    <string name="maintitle1">User Details</string>
-    <string name="maininfo1">Enter the details you want to pre-fill within the temperature form. You can choose to leave any field empty. Bot MD does not store any of this information on our servers.</string>
-    <string name="maintitle2">Schedule Reminders</string>
-    <string name="maininfo2">Bot MD can also help schedule optional daily reminders to log your temperature</string>
-    <string name="reminder">Reminder</string>
-    <string name="title_location">Location</string>
-    <string name="title_home">Temperature Module</string>
-    <string name="title_reminder">Set Reminder</string>
+    <string name="notif_location">Location</string>
+    <string name="notif_name">Name</string>
+    <string name="notif_date">Datetime</string>
+    <string name="notif_title">Edit notification</string>
+    <string name="notif_hint">None</string>
+    <string name="notif_arrival">Arrival time</string>
+    <string name="title_carpark">Carparks</string>
+    <string name="title_notification">Notifications</string>
+    <string name="notif_ID">ID</string>
 </resources>

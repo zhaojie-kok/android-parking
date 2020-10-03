@@ -23,8 +23,8 @@ public class CarparkFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        getActivity().setTitle(R.string.title_location);
-        View v = inflater.inflate(R.layout.fragment_carparkk, container, false);
+        getActivity().setTitle(R.string.title_carpark);
+        View v = inflater.inflate(R.layout.fragment_carpark, container, false);
 
         ArrayList<Carpark> list = new ArrayList<Carpark>();
         final CarparkAdapter adapter = new CarparkAdapter(getActivity(), list);

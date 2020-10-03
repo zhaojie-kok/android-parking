@@ -5,35 +5,32 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.example.abcapp.R;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
-public class NotifAdapter extends ArrayAdapter<String> {
-    public NotifAdapter(Context context, ArrayList<String> notifications) {
+public class NotifAdapter extends ArrayAdapter<Notification> {
+    public NotifAdapter(Context context, ArrayList<Notification> notifications) {
         super(context,  0, notifications);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        String location = getItem(position);
+        Notification notification = getItem(position);
         if (convertView == null){
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_search, parent, false);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_notif, parent, false);
         }
-        TextView icon = convertView.findViewById(R.id.item_icon);
-        TextView name = convertView.findViewById(R.id.item_name);
-        if (position == 0){
-            icon.setText(String.valueOf(location.charAt(0)));
-        }
-        else if (location.charAt(0) != getItem(position-1).charAt(0)){
-            icon.setText(String.valueOf(location.charAt(0)));
-        }
-        else{
-            icon.setText("");
-        }
-        name.setText(location);
+
+        Switch s = convertView.findViewById(R.id.notif_switch);
+        s.setChecked(notification.isEnabled());
+        TextView t = convertView.findViewById(R.id.notif_name);
+        t.setText(notification.getName());
+        Calendar calendar = notification.getCalendar();
+
         return convertView;
     }
 }

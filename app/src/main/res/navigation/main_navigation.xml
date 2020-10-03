@@ -3,27 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@+id/list_fragment">
 
     <fragment
-        android:id="@+id/navigation_home"
-        android:name="com.example.abcapp.Notif.ui.notification.NotifFragment"
-        android:label="@string/title_home"
-        tools:layout="@layout/fragment_notif" >
+        android:id="@+id/list_fragment"
+        android:name="com.example.abcapp.Notif.ui.notificationList.ListFragment"
+        android:label="@string/title_notification"
+        tools:layout="@layout/fragment_list_notif">
         <action
             android:id="@+id/action_navigation_home_to_navigation_location"
-            app:destination="@id/navigation_location" />
+            app:destination="@id/carpark_fragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_editFragment"
+            app:destination="@id/editFragment" />
 
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_location"
+        android:id="@+id/carpark_fragment"
         android:name="com.example.abcapp.Notif.ui.carparkSelector.CarparkFragment"
-        android:label="@string/title_location"
-        tools:layout="@layout/fragment_carparkk" >
+        android:label="@string/title_carpark"
+        tools:layout="@layout/fragment_carpark">
         <action
             android:id="@+id/action_navigation_location_to_navigation_home"
-            app:destination="@id/navigation_home" />
+            app:destination="@id/list_fragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/editFragment"
+        android:name="com.example.abcapp.Notif.ui.editNotification.EditFragment"
+        android:label="EditFragment" >
+        <action
+            android:id="@+id/action_editFragment_to_navigation_home"
+            app:destination="@id/list_fragment" />
     </fragment>
 
 </navigation>
