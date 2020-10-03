@@ -223,8 +223,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     // adjust the camera
                     if (endMarker != null && endMarker.isShown()) {
-                        LatLngBounds mapBounds = new LatLngBounds(startPt, endPt);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 2));
+                        // shift the camera to display the start and end points
+                        LatLngBounds mapBounds = findLatLngBounds(startPt, endPt);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 100));
                     } else {
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startMarker.getLatLng(), 15.0f));
                     }
@@ -269,8 +270,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     // adjust the camera
                     if (startMarker != null && startMarker.isShown()) {
-                        LatLngBounds mapBounds = new LatLngBounds(startPt, endPt);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 2));
+                        // shift the camera to display the start and end points
+                        LatLngBounds mapBounds = findLatLngBounds(startPt, endPt);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 100));
                     } else {
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(endMarker.getLatLng(), 15.0f));
                     }
@@ -298,7 +300,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // enable map gestures like zoom and sliding
         mMap.getUiSettings().setAllGesturesEnabled(true);
+        // disable intrusive features such as tool bar and the location button
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.setMyLocationEnabled(true);
 
         // request for location updates and shift map camera
@@ -341,7 +345,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // method to display weather popup
     public void createWeatherPopup() {
         dialogBuilder = new AlertDialog.Builder(this);
-        final View weatherPopup = getLayoutInflater().inflate(R.layout.weather_popup, null);
+        final View weatherPopup = getLayoutInflater().inflate(R.layout.weather_popup, null, false);
 
         // instantiate the weather texts
         currWeather = (TextView) weatherPopup.findViewById(R.id.weatherInfoNow);
@@ -352,6 +356,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         weatherPopup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Toast.makeText(MapsActivity.this, "closing weather info", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
@@ -360,5 +365,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         dialogBuilder.setView(weatherPopup);
         dialog = dialogBuilder.create();
         dialog.show();
+    }
+
+    // helper function to fine NorthEast and SouthWest Corners of 2 points formatted as LatLngBounds
+    public LatLngBounds findLatLngBounds(LatLng pt1, LatLng pt2) {
+        double northMost = Math.max(pt1.latitude, pt2.latitude);
+        double southMost = Math.min(pt1.latitude, pt2.latitude);
+        double eastMost = Math.max(pt1.longitude, pt2.longitude);
+        double westMost = Math.max(pt1.longitude, pt2.longitude);
+
+        LatLng NorthEast = new LatLng(northMost, eastMost);
+        LatLng SouthWest = new LatLng(southMost, westMost);
+
+        return new LatLngBounds(SouthWest, NorthEast);
     }
 }
