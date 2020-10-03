@@ -22,58 +22,6 @@ public class Weather {
     private HashMap <String, LatLng> areaCoordsNow = null;
     private HashMap<String, Object> weatherNow = null; // using objects since both datetime and Strings will be stored
     private HashMap<String, Object> weatherForecast = null;
-    private APIcaller caller = new APIcaller();
-
-    // constructor with API call performed by this class (wrong, only for testing)
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    Weather() throws Exception {
-        JSONObject resNow = caller.getWeatherNow(LocalDateTime.now());
-        JSONObject resForecast = caller.getWeatherForecast(LocalDateTime.now());
-
-        // record the coordinates
-        if (resNow != null) {
-            weatherJSONNow = resNow;
-            JSONArray infoArr = weatherJSONNow.getJSONObject("metadata").getJSONArray("stations");
-            String id;
-            Double rainfall;
-            JSONObject coords;
-
-            // store the coordinates of each station as specified by data.gov.sg
-            // these coordinates will be used in subsequent calculations
-            for (int i = 0; i < infoArr.length(); i++) {
-                id = infoArr.getJSONObject(i).getString("device_id");
-                coords = infoArr.getJSONObject(i).getJSONObject("location");
-                areaCoordsNow.put(id,
-                        new LatLng(coords.getDouble("latitude"),
-                                coords.getDouble("longitude")
-                        )
-                );
-            }
-        }
-
-        if (resForecast != null) {
-            weatherJSONForecast = resForecast;
-            JSONArray infoArr = weatherJSONForecast.getJSONArray("area_metadata");
-            String name, condition;
-            JSONObject coords;
-
-            // store the coordinates of each area in Singapore as specified by data.gov.sg
-            // these coordinates will be used in subsequent calculations
-            for (int i = 0; i < infoArr.length(); i++) {
-                name = infoArr.getJSONObject(i).getString("name");
-                coords = infoArr.getJSONObject(i).getJSONObject("label_location");
-                areaCoordsForecast.put(name,
-                        new LatLng(coords.getDouble("latitude"),
-                                coords.getDouble("longitude")
-                        )
-                );
-            }
-        }
-
-
-        this.updateWeatherNow(resNow);
-        this.updateWeatherForecast(resForecast);
-    }
 
 
     // constructor with API calls performed by controller class

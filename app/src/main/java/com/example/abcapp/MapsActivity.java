@@ -1,5 +1,6 @@
 package com.example.abcapp;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
@@ -16,6 +17,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
 import android.location.LocationListener;
@@ -44,13 +47,34 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    // Boundary classes and helpers
     private GoogleMap mMap;
+    private RequestQueue requestQueue;
+    private APICaller caller;
+
+    // Entity Classes
+    private Weather weather;
+
+    // for user address input
+    private EditText originText;
+    private EditText destText;
+    private String startText;
+    private String endText;
+    private LatLng startPt = null;
+    private LatLng endPt = null;
+    private ImageButton startSearch;
+    private ImageButton destSearch;
+    private ABCMarker startMarker;
+    private ABCMarker endMarker;
 
     // for getting location
     private ImageButton locationButton;
@@ -85,17 +109,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // make fused location client, requests and callbacks
+        /* make request queue and API caller for http API calls */
+        requestQueue = Volley.newRequestQueue(this);
+        caller = new APICaller(requestQueue);
+
+        /* make fused location client, requests and callbacks */
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(1000);
+        locationRequest.setInterval(5000);
 
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult != null) {
-                    Toast.makeText(MapsActivity.this, locationResult.toString(), Toast.LENGTH_SHORT).show();
+                    // TODO: remove this before deployment
+                    // Toast.makeText(MapsActivity.this, locationResult.toString(), Toast.LENGTH_SHORT).show();
                     return;
                 } else {
                     Toast.makeText(MapsActivity.this, "no loc", Toast.LENGTH_SHORT).show();
@@ -108,15 +137,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         };
+        /* make fused location client, requests and callbacks */
 
-        // make popup window for weather
+        /* make popup window for weather */
         weather_popup = new PopupWindow();
 
-        // make menu layout and views
+        /* make menu layout and views */
         drawer = (DrawerLayout) findViewById(R.id.drawerLayout);
         navView = (NavigationView) findViewById(R.id.navView);
+        /* make menu layout and views */
 
-        // make buttons
+        /* make text input boxes */
+        originText = findViewById(R.id.originText);
+        destText = findViewById(R.id.destText);
+
+        // allow entire text to be selected when the text box is selected
+        originText.setSelectAllOnFocus(true);
+        destText.setSelectAllOnFocus(true);
+        /* make text input boxes */
+
+        /* make simple buttons */
+        startSearch = findViewById(R.id.originSearch);
+        destSearch = findViewById(R.id.destSearch);
         weatherButton = findViewById(R.id.weatherButton);
         menuButton = findViewById(R.id.menuButton);
         locationButton = findViewById(R.id.locationButton);
@@ -138,10 +180,108 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MapsActivity.this, "find loc", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "finding location", Toast.LENGTH_SHORT).show();
                 getLocation(true);
             }
         });
+        /* make buttons */
+
+
+        /* functionality for complex buttons */
+        // the search button for the start location
+        startSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                JSONObject jsonRes = null;
+                LatLng newStartPt = null;
+                startText = originText.getText().toString();
+                try {
+                    jsonRes = caller.getCoords(startText);
+                    // store the result in newStartPt instead of startPt in case the result is invalid
+                    newStartPt = new LatLng(jsonRes.getDouble("lat"), jsonRes.getDouble("lng"));
+                } catch (Exception e) {
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                    e.printStackTrace();
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                    Toast.makeText(MapsActivity.this, "invalid start location", Toast.LENGTH_SHORT).show();
+                    return; // exit if API call was unsuccessful
+                }
+
+                if (newStartPt != null) {
+                    startPt = newStartPt;
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(startPt);
+                    try {
+                        // use the user's input as the title for the marker and the actual address as description
+                        markerOptions.title(startText);
+                        startText = jsonRes.getString("formatted_address");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    startMarker = new ABCMarker(markerOptions, startText, jsonRes);
+                    startMarker.showMarker(mMap);
+
+                    // adjust the camera
+                    if (endMarker != null && endMarker.isShown()) {
+                        LatLngBounds mapBounds = new LatLngBounds(startPt, endPt);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 2));
+                    } else {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startMarker.getLatLng(), 15.0f));
+                    }
+                } else {
+                    // display error message if the new start point is null
+                    Toast.makeText(MapsActivity.this, "invalid location", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+
+        // the search button for the destination location
+        destSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                JSONObject jsonRes = null;
+                LatLng newDestPt = null;
+                endText = destText.getText().toString();
+                try {
+                    jsonRes = caller.getCoords(endText);
+                    // store result in newDestPt instead of destPt in case result is invalid
+                    newDestPt = new LatLng(jsonRes.getDouble("lat"), jsonRes.getDouble("lng"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(MapsActivity.this, "invalid end location", Toast.LENGTH_SHORT).show();
+                    return; // exit if API call was unsuccessful
+                }
+
+                if (newDestPt != null) {
+                    endPt = newDestPt;
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(endPt);
+                    try {
+                        // use the user's input as the title for the marker and the actual address as description
+                        markerOptions.title(endText);
+                        endText = jsonRes.getString("formatted_address");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    endMarker = new ABCMarker(markerOptions, endText, jsonRes);
+                    endMarker.showMarker(mMap);
+
+                    // adjust the camera
+                    if (startMarker != null && startMarker.isShown()) {
+                        LatLngBounds mapBounds = new LatLngBounds(startPt, endPt);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 2));
+                    } else {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(endMarker.getLatLng(), 15.0f));
+                    }
+                } else {
+                    // display error message if the new start point is null
+                    Toast.makeText(MapsActivity.this, "invalid end location", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+        /* functionality for complex buttons */
     }
 
 
@@ -158,6 +298,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // enable map gestures like zoom and sliding
         mMap.getUiSettings().setAllGesturesEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.setMyLocationEnabled(true);
 
         // request for location updates and shift map camera
         getLocation(true);
@@ -185,13 +327,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         prevLoc = location;
                         if (moveCam) {
                             LatLng prevLatlng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
-                            mMap.moveCamera(CameraUpdateFactory.newLatLng(prevLatlng));
-                        } else {
-                            Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(prevLatlng, 15.0f));
                         }
                     } else {
                         trackingLocation = false;
-                        Toast.makeText(MapsActivity.this, "unable to retrieve location2", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
