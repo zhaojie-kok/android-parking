@@ -1,16 +1,21 @@
 package com.example.abcapp.Notif.ui.editNotification;
 
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Html;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -18,22 +23,17 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.ListFragment;
 import androidx.navigation.Navigation;
 
-import com.example.abcapp.Notif.NotifActivity;
 import com.example.abcapp.Notif.Notification;
+import com.example.abcapp.Notif.ReminderBroadcast;
 import com.example.abcapp.R;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -47,12 +47,14 @@ public class EditFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
         final View v = inflater.inflate(R.layout.fragment_edit_notif, container, false);
         notification = (Notification) getArguments().getSerializable("notif");
 
         // Set name
         name = v.findViewById(R.id.name);
         name.setText(notification.getName());
+        name.setInputType(InputType.TYPE_CLASS_TEXT);
 
         // Set switch (on if enabled, off if not)
         s = v.findViewById(R.id.notif_switch);
@@ -113,28 +115,44 @@ public class EditFragment extends Fragment {
             }
         });
 
-        // Set save button
+        // Set buttons
         Button save_btn = v.findViewById(R.id.btn_save);
-        save_btn.setOnClickListener(new View.OnClickListener() {
+        Button cancel_btn = v.findViewById(R.id.btn_cancel);
+        final ImageButton delete_btn = v.findViewById(R.id.btn_delete);
+
+        View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    saveNotification(notification.getName());
-                    Navigation.findNavController(v).navigate(R.id.action_editFragment_to_navigation_home);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                switch(view.getId()){
+                    case R.id.btn_delete:
+                        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (which == DialogInterface.BUTTON_POSITIVE){
+                                    deleteNotification();
+                                    deleteAlarm();
+                                    Navigation.findNavController(v).navigate(R.id.action_editFragment_to_navigation_home);
+                                }
+                            }
+                        };
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                        builder.setMessage("Are you sure you want to delete this?").setPositiveButton("Yes", dialogClickListener)
+                                .setNegativeButton("No", dialogClickListener).show();
+                        break;
+                    case R.id.btn_save:
+                        if(!saveNotification(notification.getName())){
+                            break;
+                        };
+                    default:
+                        Navigation.findNavController(v).navigate(R.id.action_editFragment_to_navigation_home);
                 }
             }
-        });
+        };
 
-        // Set cancel button
-        Button cancel_btn = v.findViewById(R.id.btn_cancel);
-        cancel_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Navigation.findNavController(v).navigate(R.id.action_editFragment_to_navigation_home);
-            }
-        });
+        save_btn.setOnClickListener(onClickListener);
+        cancel_btn.setOnClickListener(onClickListener);
+        delete_btn.setOnClickListener(onClickListener);
 
         return v;
     }
@@ -163,8 +181,42 @@ public class EditFragment extends Fragment {
                 y;
     }
 
-    private void saveNotification(String fileName) throws IOException {
+    private void deleteNotification(){
+        String fileName = notification.getName();
+        File file = new File(getActivity().getApplicationContext().getFilesDir(), fileName);
+        file.delete();
+    }
+
+    private void deleteAlarm(){
+        boolean alarmUp = (PendingIntent.getBroadcast(getContext(), notification.getId(),
+                new Intent(getActivity(), ReminderBroadcast.class),
+                PendingIntent.FLAG_NO_CREATE) != null);
+
+        if (alarmUp){
+            Intent intent = new Intent(getActivity(), ReminderBroadcast.class);
+            intent.putExtra("notif_id", notification.getId());
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), notification.getId(), intent, 0);
+            AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+
+            alarmManager.cancel(pendingIntent);
+            pendingIntent.cancel();
+        }
+    }
+
+    private void setAlarm(){
+        Intent intent = new Intent(getActivity(), ReminderBroadcast.class);
+        intent.putExtra("notif_id", notification.getId());
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), notification.getId(), intent,0);
+        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+
+        alarmManager.set(AlarmManager.RTC_WAKEUP,
+                notification.getCalendar().getTimeInMillis(),
+                pendingIntent);
+    }
+
+    private boolean saveNotification(String fileName){
         String nfileName = name.getText().toString();
+        deleteAlarm();
 
         notification.setCalendar(new GregorianCalendar(cYear, cMonth,
                 cDay, cHour, cMinute));
@@ -184,7 +236,7 @@ public class EditFragment extends Fragment {
             }
             else {
                 Toast.makeText(getActivity(), "Cannot save notification - another notification exists with that name", Toast.LENGTH_LONG).show();
-                return;
+                return false;
             }
         }
         try {
@@ -193,10 +245,14 @@ public class EditFragment extends Fragment {
             os.writeObject(notification);
             os.close();
             fo.close();
-            Toast.makeText(getActivity(), "Note saved!", Toast.LENGTH_SHORT).show();
+
+            setAlarm();
+
+            Toast.makeText(getActivity(), "Notification saved!", Toast.LENGTH_SHORT).show();
         } catch (Throwable t) {
             Toast.makeText(getActivity(), "Exception: " + t.toString(), Toast.LENGTH_LONG).show();
+            return false;
         }
-
+        return true;
     }
 }

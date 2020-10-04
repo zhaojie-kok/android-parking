@@ -18,8 +18,10 @@ public class ReminderBroadcast extends BroadcastReceiver {
         // Create an Intent for the activity you want to start
         Intent openIntent = new Intent(context, NotifActivity.class);
 
-        PendingIntent reminderIntent = PendingIntent.getActivity(context, 200, openIntent, 0);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "theonlychannel")
+        int id = intent.getIntExtra("notif_id", 0);
+
+        PendingIntent reminderIntent = PendingIntent.getActivity(context, id, openIntent, 0);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "userChannel")
                 .setSmallIcon(R.drawable.ic_pie_chart_black_24dp)
                 .setContentTitle("This is a title")
                 .setContentText("This is the text")
@@ -28,7 +30,7 @@ public class ReminderBroadcast extends BroadcastReceiver {
                 .setAutoCancel(true);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(200, builder.build());
+        notificationManager.notify(id, builder.build());
 
     }
 }

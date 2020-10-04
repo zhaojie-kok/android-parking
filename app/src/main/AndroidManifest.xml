@@ -36,6 +36,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".Notif.NotifActivity"></activity>
+        <receiver android:name=".Notif.ReminderBroadcast"></receiver>
+
     </application>
 
 </manifest>

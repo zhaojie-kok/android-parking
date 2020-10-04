@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -42,13 +43,14 @@ public class ListFragment extends Fragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int id = 0;
+                int id = 200;
                 while (notificationsIDList.contains(id)){
                     id += 1;
                 }
-                Notification created = new Notification("Untitled", id, Calendar.getInstance());
+                Calendar now = Calendar.getInstance();
+                Notification created = new Notification("Untitled "+
+                        new SimpleDateFormat("dd-MM-yy-HH:mm:ss").format(now.getTime()), id, now);
                 Bundle bundle = new Bundle();
-                bundle.putIntegerArrayList("notifID", notificationsIDList);
                 bundle.putSerializable("notif", created);
                 Navigation.findNavController(v).navigate(R.id.action_navigation_home_to_editFragment, bundle);
             }

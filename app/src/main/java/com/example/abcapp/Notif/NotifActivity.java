@@ -35,10 +35,10 @@ public class NotifActivity extends AppCompatActivity {
 
     private void createNotificationChannel(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "TestReminderChannel";
-            String description = "Channel for testing";
+            CharSequence name = "UserNotificationsChannel";
+            String description = "Channel for user-set notifications";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("theonlychannel", name, importance);
+            NotificationChannel channel = new NotificationChannel("userChannel", name, importance);
             channel.setDescription(description);
 
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
