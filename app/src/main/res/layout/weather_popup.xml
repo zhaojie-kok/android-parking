@@ -5,52 +5,90 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/weatherPopup"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginBottom="100dp"
-    android:layout_marginTop="100dp"
+    android:layout_height="wrap_content"
     android:layout_centerInParent="true"
+    android:layout_gravity="center"
     android:background="@null">
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/weathertemp"
-        app:layout_constraintTop_toBottomOf="@+id/weatherInfoNow"
-        tools:layout_editor_absoluteX="0dp" />
+        android:layout_height="500dp"
+        android:paddingHorizontal="50dp"
+        android:src="@drawable/stdbackground"
+        android:background="@null"
+        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="background"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/currentWeatherHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:layout_marginHorizontal="75dp"
+        android:text="@string/currentWeather"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="@id/imageView"
+        app:layout_constraintStart_toStartOf="@id/imageView"
+        app:layout_constraintEnd_toEndOf="@id/imageView"/>
 
     <TextView
         android:id="@+id/weatherInfoNow"
-        android:layout_width="254dp"
+        android:layout_width="match_parent"
         android:layout_height="154dp"
-        android:layout_marginTop="30dp"
-        android:text="@string/currentWeather"
+        android:layout_marginHorizontal="75dp"
+        android:text="Sunny"
+        android:gravity="center_horizontal"
+        android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="@id/imageView"
+        app:layout_constraintTop_toBottomOf="@id/currentWeatherHeader"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/forecastWeatherHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="75dp"
+        android:layout_marginTop="154dp"
+        android:text="@string/predictWeather"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/currentWeatherHeader"
+        app:layout_constraintStart_toStartOf="@id/imageView"
+        app:layout_constraintEnd_toEndOf="@id/imageView"/>
 
     <TextView
         android:id="@+id/weatherInfoForecast"
-        android:layout_width="254dp"
+        android:layout_width="match_parent"
         android:layout_height="154dp"
-        android:text="@string/predictWeather"
-        app:layout_constraintBottom_toTopOf="@+id/closePopup"
+        android:layout_marginHorizontal="75dp"
+        android:text="Sunny"
+        android:gravity="center_horizontal"
+        android:textSize="15sp"
+        app:layout_constraintTop_toBottomOf="@+id/forecastWeatherHeader"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
         app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/weatherInfoNow" />
+        tools:ignore="HardcodedText" />
 
     <Button
         android:id="@+id/closePopup"
-        android:layout_width="247dp"
-
-        android:layout_height="51dp"
-        android:layout_marginTop="30dp"
-        android:background="@null"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="75dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/buttonborder"
+        android:text="BACK"
+        android:textColor="#000000"
+        android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/imageView"
         app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/weatherInfoNow"
-        app:layout_constraintVertical_bias="0.917" />
+        app:layout_constraintTop_toBottomOf="@+id/weatherInfoForecast"
+        tools:ignore="HardcodedText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
