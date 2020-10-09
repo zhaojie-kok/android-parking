@@ -34,8 +34,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:typeface="monospace"
-            android:text="@string/originPrompt"
+            android:hint="@string/originPrompt"
             android:layout_marginTop="8dp"
+            android:layout_marginRight="50dp"
+            android:scrollHorizontally="true"
+            android:ellipsize="start"
             android:background="@drawable/search1"
             android:paddingLeft="35dp"
             android:paddingRight="50dp"
@@ -52,7 +55,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:typeface="monospace"
-            android:text="@string/destPrompt"
+            android:hint="@string/destPrompt"
+            android:layout_marginRight="50dp"
             android:scrollHorizontally="true"
             android:ellipsize="start"
             android:background="@drawable/search2"
@@ -119,8 +123,9 @@
             android:layout_marginTop="16dp"
             map:layout_constraintEnd_toEndOf="@+id/map"
             map:layout_constraintTop_toTopOf="@+id/map"
-            android:src="@drawable/location_button"
+            map:srcCompat="@drawable/location_button"
             android:background="@null"
+            android:foregroundGravity="center"
             tools:ignore="ContentDescription" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

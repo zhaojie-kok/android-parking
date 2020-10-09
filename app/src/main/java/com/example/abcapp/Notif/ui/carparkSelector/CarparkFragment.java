@@ -16,6 +16,7 @@ import com.example.abcapp.Carpark;
 import com.example.abcapp.Notif.CarparkAdapter;
 import com.example.abcapp.Notif.NotifActivity;
 import com.example.abcapp.R;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 
@@ -31,8 +32,8 @@ public class CarparkFragment extends Fragment {
         ListView listView = v.findViewById(R.id.listview);
         listView.setAdapter(adapter);
 
-        list.add(new Carpark(0, "Carpark 1", 1.50, new double[]{1.00, 1.00}));
-        list.add(new Carpark(1, "Carpark 2", 2.50, new double[]{1.10, 1.10}));
+        list.add(new Carpark(0, "Carpark 1", 1.50, new LatLng(1.00, 1.00)));
+        list.add(new Carpark(1, "Carpark 2", 2.50, new LatLng(1.10, 1.10)));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

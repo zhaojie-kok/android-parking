@@ -1,12 +1,14 @@
 package com.example.abcapp;
 
+import com.google.android.gms.maps.model.LatLng;
+
 public class Carpark {
     private int id;
     private String name;
     private double rate;
-    private double[] coordinates;
+    private LatLng coordinates;
 
-    public Carpark(int id, String name, double rate, double[] coordinates){
+    public Carpark(int id, String name, double rate, LatLng coordinates){
         this.id = id;
         this.name = name;
         this.rate = rate;
@@ -25,7 +27,7 @@ public class Carpark {
         return name;
     }
 
-    public double[] getCoordinates() {
+    public LatLng getCoordinates() {
         return coordinates;
     }
 }
