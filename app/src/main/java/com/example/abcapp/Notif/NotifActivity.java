@@ -45,5 +45,4 @@ public class NotifActivity extends AppCompatActivity {
             notificationManager.createNotificationChannel(channel);
         }
     }
-    public static String carpark;
 }

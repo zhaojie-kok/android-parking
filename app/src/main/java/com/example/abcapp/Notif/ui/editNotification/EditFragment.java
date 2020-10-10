@@ -115,7 +115,7 @@ public class EditFragment extends Fragment {
             }
         });
 
-        // Set buttons
+        // Set buttons/click-ables
         Button save_btn = v.findViewById(R.id.btn_save);
         Button cancel_btn = v.findViewById(R.id.btn_cancel);
         final ImageButton delete_btn = v.findViewById(R.id.btn_delete);
@@ -124,6 +124,11 @@ public class EditFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 switch(view.getId()){
+                    case R.id.location_name:
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("notif", notification);
+                        Navigation.findNavController(v).navigate(R.id.action_editFragment_to_carpark_fragment);
+                        break;
                     case R.id.btn_delete:
                         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                             @Override
@@ -153,6 +158,8 @@ public class EditFragment extends Fragment {
         save_btn.setOnClickListener(onClickListener);
         cancel_btn.setOnClickListener(onClickListener);
         delete_btn.setOnClickListener(onClickListener);
+        TextView location_name = v.findViewById(R.id.location_name);
+        location_name.setOnClickListener(onClickListener);
 
         return v;
     }

@@ -6,6 +6,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import com.example.abcapp.Carpark;
+
 import java.io.Serializable;
 import java.sql.Time;
 import java.util.Calendar;
@@ -15,12 +17,15 @@ public class Notification implements Serializable {
     private final int id;
     private Calendar calendar;
     private boolean enabled = true;
+    private Carpark carpark;
 
     public Notification(String name, int id, Calendar calendar){
         this.name = name;
         this.id = id;
         this.calendar = calendar;
     }
+
+    public void setCarpark(Carpark carpark){ this.carpark = carpark; }
 
     public void setName(String name){
         this.name = name;

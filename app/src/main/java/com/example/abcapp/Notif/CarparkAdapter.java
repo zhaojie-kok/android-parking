@@ -24,7 +24,7 @@ public class CarparkAdapter extends ArrayAdapter<Carpark> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_search, parent, false);
         }
         TextView name = convertView.findViewById(R.id.search_name);
-        name.setText(carpark.getName());
+        name.setText(carpark.getNo());
         return convertView;
     }
 }
