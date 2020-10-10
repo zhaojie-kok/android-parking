@@ -164,8 +164,7 @@ public class EditFragment extends Fragment {
         save_btn.setOnClickListener(onClickListener);
         cancel_btn.setOnClickListener(onClickListener);
         delete_btn.setOnClickListener(onClickListener);
-        TextView location_name = v.findViewById(R.id.location_name);
-        location_name.setOnClickListener(onClickListener);
+        v.findViewById(R.id.location_layout).setOnClickListener(onClickListener);
 
         return v;
     }

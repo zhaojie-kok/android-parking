@@ -27,6 +27,16 @@ public class Home extends AppCompatActivity {
                 openMapActivity();
             }
         });
+
+        // Notif button
+
+        notifButton = findViewById(R.id.notifBtn);
+        notifButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openNotifActivity();
+            }
+        });
     }
 
     // Method to change activity to MapsActivity
