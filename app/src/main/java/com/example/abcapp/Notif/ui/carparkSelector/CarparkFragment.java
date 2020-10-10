@@ -32,15 +32,11 @@ public class CarparkFragment extends Fragment {
         ListView listView = v.findViewById(R.id.listview);
         listView.setAdapter(adapter);
 
-        list.add(new Carpark(0, "Carpark 1", 1.50, new LatLng(1.00, 1.00)));
-        list.add(new Carpark(1, "Carpark 2", 2.50, new LatLng(1.10, 1.10)));
-
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 String selected = (String) parent.getItemAtPosition(position);
-                NotifActivity.carpark = selected;
-                Navigation.findNavController(v).navigate(R.id.action_navigation_location_to_navigation_home);
+                Navigation.findNavController(v).navigate(R.id.action_carpark_fragment_to_editFragment);
             }
         });
 
