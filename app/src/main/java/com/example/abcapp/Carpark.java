@@ -5,7 +5,9 @@ import com.google.android.gms.maps.model.LatLng;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Carpark {
+import java.io.Serializable;
+
+public class Carpark implements Serializable {
     private String address;
     private String name;
     private double rate;

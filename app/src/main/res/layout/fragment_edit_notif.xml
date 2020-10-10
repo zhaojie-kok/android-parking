@@ -72,7 +72,7 @@
                 android:layout_weight="1"
                 android:background="@null"
                 android:drawablePadding="10dp"
-                android:editable="true"
+                android:selectAllOnFocus="true"
                 android:hint="@string/notif_name"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
