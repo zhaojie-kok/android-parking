@@ -72,7 +72,7 @@
                 android:layout_weight="1"
                 android:background="@null"
                 android:drawablePadding="10dp"
-                android:editable="true"
+                android:selectAllOnFocus="true"
                 android:hint="@string/notif_name"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
@@ -91,6 +91,7 @@
             android:background="@android:color/black" />
 
         <LinearLayout
+            android:id="@+id/location_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/notif_layout_margin"

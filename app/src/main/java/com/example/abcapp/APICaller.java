@@ -376,13 +376,15 @@ public class APICaller {
     // method to update CarparkList
     public ArrayList<Carpark> updateCarparks() throws Exception {
         String response = httpGet("https://data.gov.sg/api/action/datastore_search?resource_id=139a3035-e624-4f56-b63f-89ae28d4ae4c");
+        System.out.printf("RESPONSE: %s\n", response);
         JSONObject jsonObject = new JSONObject(response);
-        JSONObject result = (JSONObject) jsonObject.get("response");
+        JSONObject result = (JSONObject) jsonObject.get("result");
         JSONArray records = (JSONArray) result.get("records");
 
         ArrayList<Carpark> carparks  = new ArrayList<Carpark>();
         for (int i = 0; i < records.length(); i++){
-            carparks.add(CarparkConstructor.construct(records.getJSONObject(i)));
+            System.out.printf("%d", i);
+            carparks.add(new Carpark(records.getJSONObject(i)));
         }
         return carparks;
     }
