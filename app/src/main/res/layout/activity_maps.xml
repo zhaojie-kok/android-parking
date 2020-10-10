@@ -8,6 +8,7 @@
     android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
@@ -18,12 +19,12 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="120dp"
             android:layout_marginHorizontal="0dp"
-            map:layout_constraintTop_toBottomOf="@id/destText"
+            android:layout_marginTop="120dp"
             map:layout_constraintBottom_toBottomOf="parent"
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintStart_toStartOf="parent"
+            map:layout_constraintTop_toBottomOf="@id/destText"
             tools:context=".MapsActivity"
             tools:layout="@layout/activity_maps" >
         </androidx.fragment.app.FragmentContainerView>
@@ -62,10 +63,11 @@
             android:paddingLeft="50dp"
             android:paddingRight="50dp"
             android:gravity="center_vertical"
+            android:singleLine="true"
+            android:typeface="monospace"
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintStart_toStartOf="parent"
             map:layout_constraintTop_toBottomOf="@+id/originText"
-            android:typeface="monospace"
             android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment" />
 
         <ImageButton
@@ -104,23 +106,26 @@
 <!--section bellow is for buttons in the map-->
         <ImageButton
             android:id="@+id/menuButton"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_marginBottom="2dp"
+            android:layout_marginLeft="2dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:src="@drawable/menu"
+            android:src="@drawable/menubutton"
             map:layout_constraintBottom_toBottomOf="@+id/map"
             map:layout_constraintStart_toStartOf="@+id/map"
-            tools:ignore="ContentDescription" />
+            tools:ignore="ContentDescription,VectorDrawableCompat" />
 
         <ImageButton
             android:id="@+id/weatherButton"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="2dp"
             android:src="@drawable/weatherbtn"
+            android:scaleType="fitCenter"
+            android:background="@null"
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintTop_toTopOf="@+id/map"
             tools:ignore="ContentDescription" />
@@ -129,13 +134,12 @@
             android:id="@+id/locationButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/location_button"
             android:background="@null"
             map:layout_constraintBottom_toBottomOf="@+id/map"
             map:layout_constraintEnd_toEndOf="@+id/map"
+            android:foregroundGravity="center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/recenterbutton"
             tools:ignore="ContentDescription,VectorDrawableCompat" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

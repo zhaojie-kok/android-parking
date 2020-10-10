@@ -11,9 +11,6 @@
         android:label="@string/title_notification"
         tools:layout="@layout/fragment_list_notif">
         <action
-            android:id="@+id/action_navigation_home_to_navigation_location"
-            app:destination="@id/carpark_fragment" />
-        <action
             android:id="@+id/action_navigation_home_to_editFragment"
             app:destination="@id/editFragment" />
 
@@ -25,8 +22,8 @@
         android:label="@string/title_carpark"
         tools:layout="@layout/fragment_carpark">
         <action
-            android:id="@+id/action_navigation_location_to_navigation_home"
-            app:destination="@id/list_fragment" />
+            android:id="@+id/action_carpark_fragment_to_editFragment"
+            app:destination="@id/editFragment" />
     </fragment>
     <fragment
         android:id="@+id/editFragment"
@@ -35,6 +32,9 @@
         <action
             android:id="@+id/action_editFragment_to_navigation_home"
             app:destination="@id/list_fragment" />
+        <action
+            android:id="@+id/action_editFragment_to_carpark_fragment"
+            app:destination="@id/carpark_fragment" />
     </fragment>
 
 </navigation>

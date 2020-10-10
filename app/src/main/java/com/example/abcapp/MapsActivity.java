@@ -87,7 +87,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private DrawerLayout drawer;
     private NavigationView navView;
 
-    // for weather pop up
+    // for weatherbtn pop up
     ImageButton weatherButton;
     Button weatherClose;
     private PopupWindow weather_popup;
@@ -150,7 +150,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         };
         /* make fused location client, requests and callbacks */
 
-        /* make popup window for weather */
+        /* make popup window for weatherbtn */
         weather_popup = new PopupWindow();
 
         /* make menu layout and views */
@@ -403,12 +403,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    // method to display weather popup
+    // method to display weatherbtn popup
     public void createWeatherPopup() {
         dialogBuilder = new AlertDialog.Builder(this);
         final View weatherPopup = getLayoutInflater().inflate(R.layout.weather_popup, null, false);
 
-        // instantiate the weather texts
+        // instantiate the weatherbtn texts
         currWeather = (TextView) weatherPopup.findViewById(R.id.weatherInfoNow);
         predWeather = (TextView) weatherPopup.findViewById(R.id.weatherInfoForecast);
 

@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Stack;
 
 public class APICaller {
@@ -216,7 +217,7 @@ public class APICaller {
         return output;
     }
 
-    // method to call weather forecast API
+    // method to call weatherbtn forecast API
     // TODO: make async
     public JSONObject getWeatherForecast(LocalDateTime now) throws Exception {
         String response = null;
@@ -262,7 +263,7 @@ public class APICaller {
         return jsonRes;
     }
 
-    // method to get current weather conditions
+    // method to get current weatherbtn conditions
     // TODO: make async
     public JSONObject getWeatherNow(LocalDateTime now) throws Exception {
         JSONObject jsonRes = null;
@@ -350,11 +351,25 @@ public class APICaller {
             }
         }
 
-        // filter the carpark vancancy information
+        // filter the carpark vacancy information
         if (jsonRes != null) {
             carparkInfo = jsonRes.getJSONArray("items").getJSONObject(0).getJSONArray("carpark_data");
         }
 
         return carparkInfo;
+    }
+
+    // method to update CarparkList
+    public ArrayList<Carpark> updateCarparks() throws Exception {
+        String response = httpGet("https://data.gov.sg/api/action/datastore_search?resource_id=139a3035-e624-4f56-b63f-89ae28d4ae4c");
+        JSONObject jsonObject = new JSONObject(response);
+        JSONObject result = (JSONObject) jsonObject.get("response");
+        JSONArray records = (JSONArray) result.get("records");
+
+        ArrayList<Carpark> carparks  = new ArrayList<Carpark>();
+        for (int i = 0; i < records.length(); i++){
+            carparks.add(CarparkConstructor.construct(records.getJSONObject(i)));
+        }
+        return carparks;
     }
 }
