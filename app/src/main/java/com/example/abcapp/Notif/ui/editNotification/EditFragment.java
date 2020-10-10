@@ -125,8 +125,6 @@ public class EditFragment extends Fragment {
             public void onClick(View view) {
                 switch(view.getId()){
                     case R.id.location_name:
-                        Bundle bundle = new Bundle();
-                        bundle.putSerializable("notif", notification);
                         Navigation.findNavController(v).navigate(R.id.action_editFragment_to_carpark_fragment);
                         break;
                     case R.id.btn_delete:

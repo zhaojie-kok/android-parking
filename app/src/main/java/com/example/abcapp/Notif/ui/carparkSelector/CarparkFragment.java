@@ -12,6 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+import com.example.abcapp.APICaller;
 import com.example.abcapp.Carpark;
 import com.example.abcapp.Notif.CarparkAdapter;
 import com.example.abcapp.Notif.NotifActivity;
@@ -24,10 +27,18 @@ public class CarparkFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        getActivity().setTitle(R.string.title_carpark);
         View v = inflater.inflate(R.layout.fragment_carpark, container, false);
 
-        ArrayList<Carpark> list = new ArrayList<Carpark>();
+        RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
+        APICaller apiCaller = new APICaller(requestQueue);
+        ArrayList<Carpark> list = new ArrayList<>();
+        try {
+            list = apiCaller.updateCarparks();
+            apiCaller.getCoords("NTU Singapore");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         final CarparkAdapter adapter = new CarparkAdapter(getActivity(), list);
         ListView listView = v.findViewById(R.id.listview);
         listView.setAdapter(adapter);
@@ -35,7 +46,7 @@ public class CarparkFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                String selected = (String) parent.getItemAtPosition(position);
+                Carpark selected = (Carpark) parent.getItemAtPosition(position);
                 Navigation.findNavController(v).navigate(R.id.action_carpark_fragment_to_editFragment);
             }
         });

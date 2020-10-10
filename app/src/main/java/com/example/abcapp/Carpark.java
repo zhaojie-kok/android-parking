@@ -2,6 +2,9 @@ package com.example.abcapp;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Carpark {
     private String address;
     private String name;
@@ -9,11 +12,11 @@ public class Carpark {
     private String carparkType;
     private LatLng coordinates;
 
-    public Carpark(String carparkType, LatLng coordinates, String address, String name){
-        this.carparkType = carparkType;
-        this.coordinates = coordinates;
-        this.address = address;
-        this.name = name;
+    public Carpark(JSONObject carparkJSON) throws JSONException {
+        this.carparkType = carparkJSON.getString("car_park_type");
+        this.coordinates = new LatLng(carparkJSON.getDouble("x_coord"), carparkJSON.getDouble("y_coord"));
+        this.address = carparkJSON.getString("address");
+        this.name = carparkJSON.getString("car_park_no");
     }
 
     public String getName() {
