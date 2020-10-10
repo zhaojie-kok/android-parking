@@ -115,6 +115,12 @@ public class EditFragment extends Fragment {
             }
         });
 
+        // Set carpark name if any
+        if (notification.getCarpark()!=null){
+            TextView carparkTextView = v.findViewById(R.id.location_input);
+            carparkTextView.setText(notification.getCarparkName());
+        }
+
         // Set buttons/click-ables
         Button save_btn = v.findViewById(R.id.btn_save);
         Button cancel_btn = v.findViewById(R.id.btn_cancel);
@@ -124,8 +130,10 @@ public class EditFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 switch(view.getId()){
-                    case R.id.location_name:
-                        Navigation.findNavController(v).navigate(R.id.action_editFragment_to_carpark_fragment);
+                    case R.id.location_layout:
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("notif", notification);
+                        Navigation.findNavController(v).navigate(R.id.action_editFragment_to_carpark_fragment, bundle);
                         break;
                     case R.id.btn_delete:
                         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {

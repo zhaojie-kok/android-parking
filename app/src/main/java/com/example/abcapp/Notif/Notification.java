@@ -17,7 +17,7 @@ public class Notification implements Serializable {
     private final int id;
     private Calendar calendar;
     private boolean enabled = true;
-    private Carpark carpark;
+    private Carpark carpark = null;
 
     public Notification(String name, int id, Calendar calendar){
         this.name = name;
@@ -46,6 +46,10 @@ public class Notification implements Serializable {
     public Calendar getCalendar(){
         return this.calendar;
     }
+
+    public Carpark getCarpark(){ return carpark; }
+
+    public String getCarparkName(){ return carpark.getName(); }
 
     public boolean toggleEnabled(){
         enabled = !enabled;

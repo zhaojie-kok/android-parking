@@ -18,6 +18,7 @@ import com.example.abcapp.APICaller;
 import com.example.abcapp.Carpark;
 import com.example.abcapp.Notif.CarparkAdapter;
 import com.example.abcapp.Notif.NotifActivity;
+import com.example.abcapp.Notif.Notification;
 import com.example.abcapp.R;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -28,6 +29,7 @@ public class CarparkFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_carpark, container, false);
+        final Notification notification = (Notification) getArguments().getSerializable("notif");
 
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         APICaller apiCaller = new APICaller(requestQueue);
@@ -47,7 +49,10 @@ public class CarparkFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Carpark selected = (Carpark) parent.getItemAtPosition(position);
-                Navigation.findNavController(v).navigate(R.id.action_carpark_fragment_to_editFragment);
+                Bundle bundle = new Bundle();
+                notification.setCarpark(selected);
+                bundle.putSerializable("notif", notification);
+                Navigation.findNavController(v).navigate(R.id.action_carpark_fragment_to_editFragment, bundle);
             }
         });
 

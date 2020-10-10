@@ -91,6 +91,7 @@
             android:background="@android:color/black" />
 
         <LinearLayout
+            android:id="@+id/location_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/notif_layout_margin"
