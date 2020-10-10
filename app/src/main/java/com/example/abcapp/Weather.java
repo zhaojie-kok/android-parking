@@ -17,7 +17,7 @@ public class Weather {
     // keep record of the JSONs for use where needed
     private JSONObject weatherJSONNow;
     private JSONObject weatherJSONForecast;
-    // NEA has different coordinates for its current and forecast weather data thus need 2 hashmaps
+    // NEA has different coordinates for its current and forecast weatherbtn data thus need 2 hashmaps
     private HashMap <String, LatLng> areaCoordsForecast = null;
     private HashMap <String, LatLng> areaCoordsNow = null;
     private HashMap<String, Object> weatherNow = null; // using objects since both datetime and Strings will be stored
@@ -30,7 +30,7 @@ public class Weather {
 
         // only record successful api calls
 
-        // record the current weather conditions
+        // record the current weatherbtn conditions
         if (resNow != null) {
             weatherJSONNow = resNow;
             JSONArray infoArr = weatherJSONNow.getJSONObject("metadata").getJSONArray("stations");
@@ -50,7 +50,7 @@ public class Weather {
                 );
             }
 
-            // next store the current weather conditions from the JSON
+            // next store the current weatherbtn conditions from the JSON
             infoArr = weatherJSONNow.getJSONArray("items").getJSONObject(0).getJSONArray("readings");
             for (int i = 0; i < infoArr.length(); i++) {
                 id = infoArr.getJSONObject(i).getString("station_id");
@@ -63,7 +63,7 @@ public class Weather {
             weatherNow.put("timestamp", timeStamp);
         }
 
-        // record the forecasted weather conditions
+        // record the forecasted weatherbtn conditions
         if (resForecast != null) {
             weatherJSONForecast = resForecast;
             JSONArray infoArr = weatherJSONForecast.getJSONArray("area_metadata");
@@ -82,7 +82,7 @@ public class Weather {
                 );
             }
 
-            // next store the weather conditions from the JSON
+            // next store the weatherbtn conditions from the JSON
             infoArr = weatherJSONForecast.getJSONArray("items").getJSONObject(0).getJSONArray("forecasts");
             for (int i = 0; i < infoArr.length(); i++) {
                 name = infoArr.getJSONObject(i).getString("area");
@@ -98,7 +98,7 @@ public class Weather {
         }
     }
 
-    // update the current weather conditions
+    // update the current weatherbtn conditions
     @RequiresApi(api = Build.VERSION_CODES.O)
     public int updateWeatherNow(JSONObject resNow) throws Exception{
         if (resNow != null) {
@@ -106,7 +106,7 @@ public class Weather {
             String id;
             Double rainfall;
 
-            // next store the current weather conditions from the JSON
+            // next store the current weatherbtn conditions from the JSON
             JSONArray infoArr = weatherJSONNow.getJSONArray("items").getJSONObject(0).getJSONArray("readings");
             for (int i = 0; i < infoArr.length(); i++) {
                 id = infoArr.getJSONObject(i).getString("station_id");
@@ -124,14 +124,14 @@ public class Weather {
         }
     }
 
-    // update the forecasted weather conditions
+    // update the forecasted weatherbtn conditions
     @RequiresApi(api = Build.VERSION_CODES.O)
     public int updateWeatherForecast(JSONObject resForecast) throws Exception {
         if (resForecast != null) {
             weatherJSONForecast = resForecast;
             String name, condition;
 
-            // next store the weather conditions from the JSON
+            // next store the weatherbtn conditions from the JSON
             JSONArray infoArr = weatherJSONForecast.getJSONArray("items").getJSONObject(0).getJSONArray("forecasts");
             for (int i = 0; i < infoArr.length(); i++) {
                 name = infoArr.getJSONObject(i).getString("area");
