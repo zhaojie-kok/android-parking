@@ -1,42 +1,33 @@
 package com.example.abcapp;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONArray;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.location.Location;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.media.Image;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Looper;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -46,13 +37,19 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.navigation.NavigationView;
+
+import java.util.Arrays;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -65,16 +62,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Weather weather;
 
     // for user address input
-    private EditText originText;
-    private EditText destText;
-    private String startText;
-    private String endText;
-    private LatLng startPt = null;
-    private LatLng endPt = null;
-    private ImageButton startSearch;
-    private ImageButton destSearch;
+    private EditText startText;
+    private EditText endText;
+    private Button clearStart;
+    private Button clearEnd;
+    private ImageButton showStart;
+    private ImageButton showEnd;
     private ABCMarker startMarker;
     private ABCMarker endMarker;
+
+    // for getting routes
+    private ImageButton searchRoute;
 
     // for getting location
     private ImageButton locationButton;
@@ -97,11 +95,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private AlertDialog dialog;
     private TextView currWeather, predWeather;
 
+    // general purpose display metrics
+    int displayWidth;
+    int displayHeight;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        displayWidth = getResources().getDisplayMetrics().widthPixels;
+        displayHeight = getResources().getDisplayMetrics().heightPixels;
+
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        // set up Places API
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), getString(R.string.google_maps_key));
+        }
 
         // set up map and location relevant objects
         // Obtain the SupportMapFragment
@@ -112,6 +122,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         /* make request queue and API caller for http API calls */
         requestQueue = Volley.newRequestQueue(this);
         caller = new APICaller(requestQueue);
+        /* make request queue and API caller for http API calls */
 
         /* make fused location client, requests and callbacks */
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -147,22 +158,125 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         navView = (NavigationView) findViewById(R.id.navView);
         /* make menu layout and views */
 
-        /* make text input boxes */
-        originText = findViewById(R.id.originText);
-        destText = findViewById(R.id.destText);
 
-        // allow entire text to be selected when the text box is selected
-        originText.setSelectAllOnFocus(true);
-        destText.setSelectAllOnFocus(true);
         /* make text input boxes */
+        /* create the search bar for the origin text */
+        AutocompleteSupportFragment originAutoCompleteFragment = (AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.originText);
+
+        originAutoCompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS));
+        originAutoCompleteFragment.setCountry("SG");
+        originAutoCompleteFragment.setHint("Start Location");
+        ImageView originIcon = (ImageView) ((LinearLayout) originAutoCompleteFragment.getView()).getChildAt(0);
+        originIcon.setImageDrawable(getResources().getDrawable(R.drawable.origin_search_logo));
+        startText = (EditText) originAutoCompleteFragment.getView().findViewById(R.id.places_autocomplete_search_input);
+        originAutoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                LatLng pos = place.getLatLng();
+                String name = place.getName();
+                if (pos != null) {
+                    // first remove existing marker if it exists
+                    if (startMarker != null) {
+                        startMarker.removeMarker();
+                    }
+
+                    startMarker = new ABCMarker(
+                            new MarkerOptions()
+                                    .position(pos)
+                                    .title(name)
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)),
+                            startText.getText().toString(), place);
+                    startMarker.showMarker(mMap);
+
+                    // focus the display on only the start point if endpoint doesnt exist or is not shown
+                    if (endMarker == null || (endMarker != null && !endMarker.isShown())) {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15.0f));
+                    } else {
+                        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                        builder.include(startMarker.getLatLng());
+                        builder.include(endMarker.getLatLng());
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
+                    }
+                } else {
+                    Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Toast.makeText(MapsActivity.this,  name, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(Status status) {
+                System.out.println("+++++++++++++++++++++++++++++++++++++++++");
+                System.out.println("error from origin autocomplete");
+                System.out.println(status.getStatusMessage());
+                System.out.println(status.getStatusCode());
+                System.out.println("+++++++++++++++++++++++++++++++++++++++++");
+                Toast.makeText(MapsActivity.this,  "Network Error, please try again later", Toast.LENGTH_SHORT).show();
+            }
+        });
+        /* create the search bar for the origin text */
+
+        /* create the search bar for the destination text */
+        AutocompleteSupportFragment destAutoCompleteFragment = (AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.destText);
+
+        destAutoCompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS));
+        destAutoCompleteFragment.setCountry("SG");
+        destAutoCompleteFragment.setHint("End Location");
+        ImageView destIcon = (ImageView) ((LinearLayout) destAutoCompleteFragment.getView()).getChildAt(0);
+        destIcon.setImageDrawable((getResources().getDrawable(R.drawable.dest_search_logo)));
+        endText = (EditText) destAutoCompleteFragment.getView().findViewById(R.id.places_autocomplete_search_input);
+        destAutoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(@NonNull Place place) {
+                LatLng pos = place.getLatLng();
+                String name = place.getName();
+                if (pos != null) {
+                    if (endMarker != null) {
+                        endMarker.removeMarker();
+                    }
+                    endMarker = new ABCMarker(
+                            new MarkerOptions()
+                                    .position(pos)
+                                    .title(name)
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)),
+                            endText.getText().toString(), place);
+                    endMarker.showMarker(mMap);
+
+                    // focus the display on only the end point if start point doesnt exist or is not shown
+                    if (startMarker == null || (startMarker != null && !startMarker.isShown())) {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15.0f));
+                    } else {
+                        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                        builder.include(startMarker.getLatLng());
+                        builder.include(endMarker.getLatLng());
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
+                    }
+                }
+            }
+
+            @Override
+            public void onError(@NonNull Status status) {
+                System.out.println("+++++++++++++++++++++++++++++++++++++++++");
+                System.out.println("error from origin autocomplete");
+                System.out.println(status.getStatusMessage());
+                System.out.println(status.getStatusCode());
+                System.out.println("+++++++++++++++++++++++++++++++++++++++++");
+                Toast.makeText(MapsActivity.this,  "Network Error, please try again later", Toast.LENGTH_SHORT).show();
+            }
+        });
+        /* create the search bar for the destination text */
+        /* make text input boxes */
+
 
         /* make simple buttons */
-        startSearch = findViewById(R.id.originSearch);
-        destSearch = findViewById(R.id.destSearch);
+        // instantiating the buttons
         weatherButton = findViewById(R.id.weatherButton);
         menuButton = findViewById(R.id.menuButton);
         locationButton = findViewById(R.id.locationButton);
+        showStart = findViewById(R.id.showStart);
+        showEnd = findViewById(R.id.showEnd);
 
+        // adding functionality
         weatherButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -184,106 +298,53 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 getLocation(true);
             }
         });
-        /* make buttons */
 
-
-        /* functionality for complex buttons */
         // the search button for the start location
-        startSearch.setOnClickListener(new View.OnClickListener() {
+        showStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                JSONObject jsonRes = null;
-                LatLng newStartPt = null;
-                startText = originText.getText().toString();
-                try {
-                    jsonRes = caller.getCoords(startText);
-                    // store the result in newStartPt instead of startPt in case the result is invalid
-                    newStartPt = new LatLng(jsonRes.getDouble("lat"), jsonRes.getDouble("lng"));
-                } catch (Exception e) {
-                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                    e.printStackTrace();
-                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                    Toast.makeText(MapsActivity.this, "invalid start location", Toast.LENGTH_SHORT).show();
-                    return; // exit if API call was unsuccessful
-                }
-
-                if (newStartPt != null) {
-                    startPt = newStartPt;
-                    MarkerOptions markerOptions = new MarkerOptions();
-                    markerOptions.position(startPt);
-                    try {
-                        // use the user's input as the title for the marker and the actual address as description
-                        markerOptions.title(startText);
-                        startText = jsonRes.getString("formatted_address");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    startMarker = new ABCMarker(markerOptions, startText, jsonRes);
-                    startMarker.showMarker(mMap);
-
-                    // adjust the camera
-                    if (endMarker != null && endMarker.isShown()) {
-                        // shift the camera to display the start and end points
-                        LatLngBounds mapBounds = findLatLngBounds(startPt, endPt);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 100));
-                    } else {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startMarker.getLatLng(), 15.0f));
-                    }
+                // show error message if the start marker doesnt exist
+                if (startMarker == null || startMarker.getMarker() == null) {
+                    Toast.makeText(MapsActivity.this, "Please search for a location first", Toast.LENGTH_SHORT).show();
                 } else {
-                    // display error message if the new start point is null
-                    Toast.makeText(MapsActivity.this, "invalid location", Toast.LENGTH_SHORT).show();
+                    startMarker.showMarker(mMap);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startMarker.getLatLng(), 15.0f));
                 }
-
             }
         });
 
         // the search button for the destination location
-        destSearch.setOnClickListener(new View.OnClickListener() {
+        showEnd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                JSONObject jsonRes = null;
-                LatLng newDestPt = null;
-                endText = destText.getText().toString();
-                try {
-                    jsonRes = caller.getCoords(endText);
-                    // store result in newDestPt instead of destPt in case result is invalid
-                    newDestPt = new LatLng(jsonRes.getDouble("lat"), jsonRes.getDouble("lng"));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Toast.makeText(MapsActivity.this, "invalid end location", Toast.LENGTH_SHORT).show();
-                    return; // exit if API call was unsuccessful
-                }
-
-                if (newDestPt != null) {
-                    endPt = newDestPt;
-                    MarkerOptions markerOptions = new MarkerOptions();
-                    markerOptions.position(endPt);
-                    try {
-                        // use the user's input as the title for the marker and the actual address as description
-                        markerOptions.title(endText);
-                        endText = jsonRes.getString("formatted_address");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    endMarker = new ABCMarker(markerOptions, endText, jsonRes);
-                    endMarker.showMarker(mMap);
-
-                    // adjust the camera
-                    if (startMarker != null && startMarker.isShown()) {
-                        // shift the camera to display the start and end points
-                        LatLngBounds mapBounds = findLatLngBounds(startPt, endPt);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(mapBounds, 100));
-                    } else {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(endMarker.getLatLng(), 15.0f));
-                    }
+                // show error message if the end marker doesnt exist
+                if (endMarker == null || endMarker.getMarker() == null) {
+                    Toast.makeText(MapsActivity.this, "Please search for a location first", Toast.LENGTH_SHORT).show();
                 } else {
-                    // display error message if the new start point is null
-                    Toast.makeText(MapsActivity.this, "invalid end location", Toast.LENGTH_SHORT).show();
+                    endMarker.showMarker(mMap);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(endMarker.getLatLng(), 15.0f));
                 }
-
             }
         });
-        /* functionality for complex buttons */
+        /* make simple buttons */
+
+        /* the route searching button */
+        searchRoute = findViewById(R.id.searchRoute);
+
+        searchRoute.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // first check if there exists a start and end location
+                if (startMarker == null || endMarker == null) {
+                    Toast.makeText(MapsActivity.this, "Please set both Start and End locations", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // call google directions api asynchronously
+                caller.getRoutes(startMarker.getLatLng(), endMarker.getLatLng(), mMap, requestQueue, MapsActivity.this);
+            }
+        });
+        /* the route searching button */
     }
 
 
@@ -365,18 +426,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         dialogBuilder.setView(weatherPopup);
         dialog = dialogBuilder.create();
         dialog.show();
-    }
-
-    // helper function to fine NorthEast and SouthWest Corners of 2 points formatted as LatLngBounds
-    public LatLngBounds findLatLngBounds(LatLng pt1, LatLng pt2) {
-        double northMost = Math.max(pt1.latitude, pt2.latitude);
-        double southMost = Math.min(pt1.latitude, pt2.latitude);
-        double eastMost = Math.max(pt1.longitude, pt2.longitude);
-        double westMost = Math.max(pt1.longitude, pt2.longitude);
-
-        LatLng NorthEast = new LatLng(northMost, eastMost);
-        LatLng SouthWest = new LatLng(southMost, westMost);
-
-        return new LatLngBounds(SouthWest, NorthEast);
     }
 }

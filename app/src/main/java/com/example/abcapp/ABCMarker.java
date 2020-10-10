@@ -4,6 +4,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.libraries.places.api.model.Place;
 
 import org.json.JSONObject;
 
@@ -12,12 +13,12 @@ public class ABCMarker {
     private Marker marker = null;
     private MarkerOptions markerOptions; //  use a MarkerOptions to store most info
     private String description = null;
-    private JSONObject jsonInfo = null;
+    private Place place = null;
 
-    public ABCMarker(MarkerOptions m, String desc, JSONObject json) {
+    public ABCMarker(MarkerOptions m, String desc, Place p) {
         this.markerOptions = m;
         this.description = desc;
-        this.jsonInfo = json;
+        this.place = p;
     }
 
     public void showMarker(GoogleMap mMap) {
@@ -52,9 +53,9 @@ public class ABCMarker {
         this.shown = true;
     }
 
-    // change the json
-    public void setJSON (JSONObject json) {
-        this.jsonInfo = json;
+    // change the Place object
+    public void setPlace (Place p) {
+        this.place = p;
     }
 
     // change the description
@@ -84,9 +85,9 @@ public class ABCMarker {
         return this.description;
     }
 
-    // get the JSON
-    public JSONObject getJSON() {
-        return this.jsonInfo;
+    // get the Place object
+    public Place getPlace() {
+        return this.place;
     }
     /* accessors */
 

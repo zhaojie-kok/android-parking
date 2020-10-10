@@ -1,12 +1,17 @@
 package com.example.abcapp;
 
+import android.content.Context;
 import android.os.StrictMode;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.model.Place;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,7 +38,7 @@ public class APICaller {
         StrictMode.setThreadPolicy(policy);
     }
 
-    // Asynchronous method to call APIs
+    // Asynchronous method to call APIs (template method for async calls, not actually used)
     public final void httpGetAsync(final String address, String store) throws Exception {
         // record response
         final StringBuilder result = new StringBuilder();
@@ -76,6 +81,31 @@ public class APICaller {
         }
 
         return response.toString();
+    }
+
+
+    // method to obtain routes and display them on the map
+    public void getRoutes(LatLng startPt, LatLng endPt, GoogleMap mMap, RequestQueue rq, final Context context) {
+        final StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?origin=");
+        url.append(startPt.latitude + "," + startPt.longitude);
+        url.append("&destination=");
+        url.append(endPt.latitude + "," + endPt.longitude);
+        url.append("&key=" + gKey);
+
+        // add a new request onto the request queue, using the built url
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url.toString(), new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Toast.makeText(context, response, Toast.LENGTH_SHORT).show();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(context, "No available routes", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        this.requestQueue.add(stringRequest);
     }
 
     // method to get routes given a start and end point
