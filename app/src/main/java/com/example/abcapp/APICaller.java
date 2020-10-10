@@ -14,12 +14,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.model.Place;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.Array;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Stack;
@@ -85,8 +87,8 @@ public class APICaller {
     }
 
 
-    // method to obtain routes and display them on the map
-    public void getRoutes(LatLng startPt, LatLng endPt, GoogleMap mMap, RequestQueue rq, final Context context) {
+    // method to obtain routes and display them on the map asynchronously
+    public void getRoutes(LatLng startPt, LatLng endPt, final GoogleMap mMap, RequestQueue rq, final ArrayList<Route> store, final Context context) {
         final StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?origin=");
         url.append(startPt.latitude + "," + startPt.longitude);
         url.append("&destination=");
@@ -97,7 +99,19 @@ public class APICaller {
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url.toString(), new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Toast.makeText(context, response, Toast.LENGTH_SHORT).show();
+                try {
+                    JSONObject jsonRes = new JSONObject(response);
+                    JSONArray allRoutes = jsonRes.getJSONArray("routes");
+
+                    for (int i=0; i<allRoutes.length(); i++) {
+                        store.add(new Route(allRoutes.getJSONObject(i)));
+                    }
+                    Toast.makeText(context, "Showing Route", Toast.LENGTH_SHORT).show();
+                    store.get(0).displayRoute(mMap);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(context, "No available routes", Toast.LENGTH_SHORT).show();
+                }
             }
         }, new Response.ErrorListener() {
             @Override

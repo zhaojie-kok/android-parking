@@ -31,14 +31,18 @@ public class ABCMarker {
 
     // temporarily hide the marker
     public void hideMarker() {
-        this.marker.setVisible(false);
+        if (this.marker != null) {
+            this.marker.setVisible(false);
+        }
         this.shown = false;
     }
 
     // permanently delete the marker
     public void removeMarker() {
-        this.marker.remove();
-        this.marker = null;
+        if (this.marker != null) {
+            this.marker.remove();
+            this.marker = null;
+        }
         this.shown = false;
     }
 

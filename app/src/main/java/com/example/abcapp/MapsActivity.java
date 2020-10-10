@@ -49,6 +49,7 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -73,6 +74,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // for getting routes
     private ImageButton searchRoute;
+    private Route currentRoute;
+    public static ArrayList<Route> potentialRoutes;
 
     // for getting location
     private ImageButton locationButton;
@@ -101,12 +104,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        displayWidth = getResources().getDisplayMetrics().widthPixels;
-        displayHeight = getResources().getDisplayMetrics().heightPixels;
-
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        // get the dimensions of the device screen for general use
+        displayWidth = getResources().getDisplayMetrics().widthPixels;
+        displayHeight = getResources().getDisplayMetrics().heightPixels;
 
         // set up Places API
         if (!Places.isInitialized()) {
@@ -201,7 +204,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Toast.makeText(MapsActivity.this,  name, Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -251,6 +253,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         builder.include(endMarker.getLatLng());
                         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
                     }
+                } else {
+                    Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                    return;
                 }
             }
 
@@ -329,6 +334,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         /* make simple buttons */
 
         /* the route searching button */
+        // first instantiate the currentRoute, the potentialRoutes, then the searchRoute button
+        currentRoute = null;
+        potentialRoutes = new ArrayList<Route>();
         searchRoute = findViewById(R.id.searchRoute);
 
         searchRoute.setOnClickListener(new View.OnClickListener() {
@@ -341,7 +349,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 // call google directions api asynchronously
-                caller.getRoutes(startMarker.getLatLng(), endMarker.getLatLng(), mMap, requestQueue, MapsActivity.this);
+                Toast.makeText(MapsActivity.this, "finding route", Toast.LENGTH_SHORT).show();
+                caller.getRoutes(startMarker.getLatLng(), endMarker.getLatLng(), mMap, requestQueue, potentialRoutes, MapsActivity.this);
             }
         });
         /* the route searching button */
