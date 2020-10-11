@@ -9,9 +9,9 @@ import com.google.android.gms.maps.model.LatLng;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class Weather {
     // keep record of the JSONs for use where needed
@@ -24,12 +24,8 @@ public class Weather {
     private HashMap<String, Object> weatherForecast = null;
 
 
-    // constructor with API calls performed by controller class
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    // constructor
     Weather(JSONObject resNow, JSONObject resForecast) throws Exception{
-
-        // only record successful api calls
-
         // record the current weatherbtn conditions
         if (resNow != null) {
             weatherJSONNow = resNow;
@@ -59,7 +55,7 @@ public class Weather {
             }
             // parse and then record the timestamp of the reading
             String timeString = weatherJSONNow.getJSONArray("items").getJSONObject(0).getString("timestamp");
-            LocalDateTime timeStamp = LocalDateTime.parse(timeString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz"));
+            Date timeStamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz").parse(timeString);
             weatherNow.put("timestamp", timeStamp);
         }
 
@@ -91,15 +87,15 @@ public class Weather {
             }
             // parse and then record the valid period of the result
             JSONObject validPeriod = weatherJSONForecast.getJSONArray("items").getJSONObject(0).getJSONObject("valid_period");
-            LocalDateTime start = LocalDateTime.parse(validPeriod.getString("start"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz"));
-            LocalDateTime end = LocalDateTime.parse(validPeriod.getString("end"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz"));
+            SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz");
+            Date start = dateParser.parse(validPeriod.getString("start"));
+            Date end = dateParser.parse(validPeriod.getString("end"));
             weatherForecast.put("start", start);
             weatherForecast.put("end", end);
         }
     }
 
     // update the current weatherbtn conditions
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public int updateWeatherNow(JSONObject resNow) throws Exception{
         if (resNow != null) {
             weatherJSONNow = resNow;
@@ -115,7 +111,7 @@ public class Weather {
             }
             // parse and then record the timestamp of the reading
             String timeString = weatherJSONNow.getJSONArray("items").getJSONObject(0).getString("timestamp");
-            LocalDateTime timeStamp = LocalDateTime.parse(timeString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz"));
+            Date timeStamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz").parse(timeString);
             weatherNow.put("timestamp", timeStamp);
 
             return 1;
@@ -125,7 +121,6 @@ public class Weather {
     }
 
     // update the forecasted weatherbtn conditions
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public int updateWeatherForecast(JSONObject resForecast) throws Exception {
         if (resForecast != null) {
             weatherJSONForecast = resForecast;
@@ -140,8 +135,9 @@ public class Weather {
             }
             // parse and then record the valid period of the result
             JSONObject validPeriod = weatherJSONForecast.getJSONArray("items").getJSONObject(0).getJSONObject("valid_period");
-            LocalDateTime start = LocalDateTime.parse(validPeriod.getString("start"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz"));
-            LocalDateTime end = LocalDateTime.parse(validPeriod.getString("end"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz"));
+            SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz");
+            Date start = dateParser.parse(validPeriod.getString("start"));
+            Date end = dateParser.parse(validPeriod.getString("end"));
             weatherForecast.put("start", start);
             weatherForecast.put("end", end);
 
@@ -149,5 +145,15 @@ public class Weather {
         } else {
             return -1;
         }
+    }
+
+    // accessor for the current weather conditions
+    public HashMap<String, Object> getWeatherNow() {
+        return this.weatherNow;
+    }
+
+    // accessor for forecasted weather conditions
+    public HashMap<String, Object> getWeatherForecast() {
+        return this.weatherForecast;
     }
 }

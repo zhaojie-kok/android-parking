@@ -1,21 +1,18 @@
-package com.example.abcapp;
+package com.example.abcapp.Routes;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.gson.JsonObject;
-import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Route {
-    private ArrayList<Segment> segments;
+    public ArrayList<Segment> segments;
     private JSONObject result;
     private String summary;
     private int totalTime;
@@ -51,45 +48,30 @@ public class Route {
         for (int i=0; i<legs.length(); i++) {
             currLeg = legs.getJSONObject(i);
 
-            // extract time
-            totalTime += currLeg.getJSONObject("duration").getInt("value");
+            // extract time and add to the total
+            this.totalTime += currLeg.getJSONObject("duration").getInt("value");
 
-            // extract distance
-            totalDist += currLeg.getJSONObject("distance").getInt("value");
+            // extract distance and add to the total
+            this.totalDist += currLeg.getJSONObject("distance").getInt("value");
 
             // extract and record the steps in the current leg
             for (int j=0; j<currLeg.getJSONArray("steps").length(); j++) {
                 currStep = currLeg.getJSONArray("steps").getJSONObject(j);
+
+                // extract the driving instructions from the currStep and remove html tags
                 Instructions = currStep.getString("html_instructions");
                 Instructions = android.text.Html.fromHtml(Instructions).toString();
+
+                // extract the encoded polyline from currStep
                 encodedPolyline = currStep.getJSONObject("polyline").getString("points");
+
+                // create a new segment from the extracted information
                 currSegment = new Segment(encodedPolyline, Instructions);
                 segments.add(currSegment);
             }
         }
     }
 
-
-    // show the entire route
-    public void displayRoute(GoogleMap mMap) {
-        for (Segment segment: segments) {
-            segment.showSegment(mMap);
-        }
-    }
-
-    // temporarily hide the route
-    public void hideRoute() {
-        for (Segment segment:segments) {
-            segment.hideSegment();
-        }
-    }
-
-    // remove the route
-    public void removeRoute() {
-        for (Segment segment:segments) {
-            segment.removeSegment();
-        }
-    }
 
     // get the directions
     public ArrayList<String> getDirections() {
@@ -98,5 +80,20 @@ public class Route {
             directions.add(segment.getDirections());
         }
         return directions;
+    }
+
+    // get the summary for the route
+    public String getSummary() {
+        return this.summary;
+    }
+
+    // get the total travel time for the route
+    public int getTotalTime() {
+        return this.totalTime;
+    }
+
+    // get the total distance for the route
+    public double getTotalDist() {
+        return this.totalDist;
     }
 }

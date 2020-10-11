@@ -4,14 +4,16 @@ import android.content.Context;
 import android.os.StrictMode;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.abcapp.Routes.Route;
+import com.example.abcapp.Routes.Traffic;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.libraries.places.api.model.Place;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,20 +23,22 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Array;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Stack;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class APICaller {
     // boolean flag for general use wherever needed
-    public RequestQueue requestQueue = null;
+    public static RequestQueue requestQueue = null;
     private boolean flag = false;
     private final static int numTries = 5;
     private final static String gKey = "AIzaSyCemoI4we1HrZ2z4TE8FvcEQYscriomdxs"; // key for testing, change to manifest key in deployment
+    private final static String ltaKey = "9KPN2QRjSp6u57qOSD1iOQ==";
 
     public APICaller(RequestQueue rq) {
-        this.requestQueue = rq;
+        APICaller.requestQueue = rq;
 
         // enable synchronous HTTP calls
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -65,7 +69,7 @@ public class APICaller {
     }
 
     // Synchronous method to call APIs
-    public final String httpGet(final String address) throws Exception {
+    public final String httpGet(final String address, HashMap<String, String> headers) throws Exception {
         String currLine;
 
         // record response
@@ -74,7 +78,27 @@ public class APICaller {
         // set up connection
         final URL url = new URL(address);
         final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        // set up the headers if any
+        if (headers != null) {
+            for (Map.Entry<String, String> item: headers.entrySet()) {
+                connection.setRequestProperty(item.getKey(), item.getValue());
+            }
+            System.out.println(headers.toString());
+        }
+
+        // set request method to GET
         connection.setRequestMethod("GET");
+
+        System.out.println(connection.getHeaderFields());
+        Map<String, List<String>> map = connection.getHeaderFields();
+        for (String key : map.keySet()) {
+            System.out.println(key + ":");
+            List<String> values = map.get(key);
+            for (String aValue : values) {
+                System.out.println("\t" + aValue);
+            }
+        }
 
         // throw connection into an inputstream and then read the stream
         final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -86,95 +110,47 @@ public class APICaller {
         return response.toString();
     }
 
+    /* asynchronous methods */
+    // method to update traffic conditions
+    public void updateTraffic(final Traffic trafficInfo) {
+        final String url = "http://datamall2.mytransport.sg/ltaodataservice/TrafficSpeedBandsv2";
 
-    // method to obtain routes and display them on the map asynchronously
-    public void getRoutes(LatLng startPt, LatLng endPt, final GoogleMap mMap, RequestQueue rq, final ArrayList<Route> store, final Context context) {
-        final StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?origin=");
-        url.append(startPt.latitude + "," + startPt.longitude);
-        url.append("&destination=");
-        url.append(endPt.latitude + "," + endPt.longitude);
-        url.append("&key=" + gKey);
-
-        // add a new request onto the request queue, using the built url
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url.toString(), new Response.Listener<String>() {
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
                     JSONObject jsonRes = new JSONObject(response);
-                    JSONArray allRoutes = jsonRes.getJSONArray("routes");
-
-                    for (int i=0; i<allRoutes.length(); i++) {
-                        store.add(new Route(allRoutes.getJSONObject(i)));
-                    }
-                    Toast.makeText(context, "Showing Route", Toast.LENGTH_SHORT).show();
-                    store.get(0).displayRoute(mMap);
+                    JSONArray jsonTraffic = jsonRes.getJSONArray("value");
+                    trafficInfo.update(jsonTraffic);
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    Toast.makeText(context, "No available routes", Toast.LENGTH_SHORT).show();
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, "No available routes", Toast.LENGTH_SHORT).show();
+                System.out.println("|| error on getting traffic info ||");
+                System.out.println(error.toString());
+                System.out.println("|| error on getting traffic info ||");
             }
-        });
+        })
+
+        // override the get headers method of the string request to add our own headers
+        {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("AccountKey", "9KPN2QRjSp6u57qOSD1iOQ==");
+                params.put("accept", "application/json");
+                return params;
+            }
+        };
 
         this.requestQueue.add(stringRequest);
     }
+    /* asynchronous methods */
 
-    // method to get routes given a start and end point
-    // TODO: incomplete
-    public JSONArray getRoutes(final String start, final String end) throws Exception {
-        JSONObject jsonRes = null;
-        final JSONObject startCoord = getCoords(start);
-        final JSONObject endCoord = getCoords(end);
-
-        // use stringbuilder cause neater to work with
-        final StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?origin=");
-        url.append(startCoord.get("lat") + "," + startCoord.get("lng"));
-        url.append("&destination=");
-        url.append(endCoord.get("lat") + "," + endCoord.get("lng"));
-        url.append("&key=" + gKey);
-
-        // get API response, up to 5 times
-        for (int i = 0; i<numTries; i++) {
-            try {
-                String response = httpGet(url.toString());
-                jsonRes = new JSONObject(response);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // check the status if there was a response
-            if (jsonRes != null) {
-                final String status = (String) jsonRes.get("status");
-                System.out.println(status);
-                // set flag as true if status is OK
-                flag = status.equals("OK");
-            }
-
-            // exit loop
-            if (flag) {
-                // reset flag to false
-                flag = false;
-                break;
-            } else {
-                // don't keep non-ok responses
-                jsonRes = null;
-            }
-        }
-
-        // extract the routes from the API json
-        // TODO: refine the extraction
-        if (jsonRes != null) {
-            final JSONArray routes = jsonRes.getJSONArray("routes");
-            return routes;
-        } else {
-            return null;
-        }
-    }
-
+    /* synchronous methods */
     // method to get coordinates from name/description of a place
     public JSONObject getCoords(String name) throws Exception {
         JSONObject jsonRes = null;
@@ -188,7 +164,7 @@ public class APICaller {
         for (int i = 0; i < numTries; i++) {
             // surround API call in a try catch
             try {
-                String response = httpGet(url.toString());
+                String response = httpGet(url.toString(), null);
                 jsonRes = new JSONObject(response);
             } catch (Exception e) {
                 System.out.println(url.toString());
@@ -197,7 +173,7 @@ public class APICaller {
 
             // check the status if there was a response
             if (jsonRes != null) {
-                final String status = (String) jsonRes.get("status");
+                final String status = jsonRes.getString("status");
                 // set flag as true if status is OK
                 flag = status.equals("OK");
             }
@@ -222,7 +198,6 @@ public class APICaller {
         // filter coordinates from the results
         final JSONArray results = (JSONArray) jsonRes.get("results");
         final JSONObject currRes = (JSONObject) results.get(0); // assume first result is best match
-        // TODO: add other useful stuff like name and place_id
 
         JSONObject output = currRes.getJSONObject("geometry").getJSONObject("location");
         output.put("place_id", currRes.getString("place_id"));
@@ -231,8 +206,104 @@ public class APICaller {
         return output;
     }
 
+    // get traffic information by API calls to LTA dataMall
+    public JSONArray updateTraffic() throws JSONException {
+        JSONObject jsonRes = null;
+        String response = null;
+        final String url = "http://datamall2.mytransport.sg/ltaodataservice/TrafficSpeedBandsv2";
+        HashMap<String, String> headers = new HashMap<String, String>();
+
+        // build the headers needed for lta API call
+        headers.put("AccountKey", "9KPN2QRjSp6u57qOSD1iOQ==");
+        headers.put("accept", "application/json");
+
+        for (int i = 0; i < numTries; i++) {
+            // surround the API in a try catch
+            try {
+                response = httpGet(url, headers);
+                jsonRes = new JSONObject(response);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // check if the response was proper
+            if (response != null) {
+                flag = jsonRes.has("value");
+            }
+
+            // filter out the result then exit loop
+            if (flag) {
+                flag = false;
+                break;
+            } else {
+                System.out.println(response);
+                jsonRes = null;
+            }
+        }
+
+        // return null if nothing was found
+        if (jsonRes == null) {
+            return null;
+        }
+
+        // filter out the traffic conditions from the results
+        return jsonRes.getJSONArray("value");
+    }
+
+    // find routes between 2 points
+    public JSONArray getRoutes(LatLng startPt, LatLng endPt) throws Exception {
+        JSONArray routes = null;
+        JSONObject jsonRes = null;
+        String response = null;
+
+        // construct the url used to make the API call
+        final StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?origin=");
+        url.append(startPt.latitude + "," + startPt.longitude);
+        url.append("&destination=");
+        url.append(endPt.latitude + "," + endPt.longitude);
+        url.append("&key=" + gKey);
+
+        // Call API
+        for (int i=0; i<numTries; i++) {
+            // surround API call in a try catch
+            try {
+                response = httpGet(url.toString(), null);
+                jsonRes = new JSONObject(response);
+            } catch (Exception e) {
+                System.out.println("|| route API exception ||");
+                e.printStackTrace();
+                System.out.println("|| route API exception ||");
+            }
+
+            // check if there was a response
+            if (jsonRes != null) {
+                final String status = jsonRes.getString("status");
+                // set flag as true if status is OK
+                flag = status.equals("OK");
+            }
+
+            // exit loop
+            if (flag) {
+                flag  = false;
+                break;
+            } else {
+                // don't keep non-ok responses
+                System.out.println(jsonRes.toString());
+                jsonRes = null;
+            }
+        }
+
+        if (jsonRes == null) {
+            return null;
+        }
+
+        // if a valid result was obtained, extract only the routes
+        routes = jsonRes.getJSONArray("routes");
+
+        return routes;
+    }
+
     // method to call weatherbtn forecast API
-    // TODO: make async
     public JSONObject getWeatherForecast(LocalDateTime now) throws Exception {
         String response = null;
         JSONObject jsonRes = null;
@@ -250,7 +321,7 @@ public class APICaller {
         for (int i=0; i<numTries; i++) {
             // surround API call in a try catch
             try {
-                response = httpGet(url.toString());
+                response = httpGet(url.toString(), null);
                 jsonRes = new JSONObject(response);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -278,7 +349,6 @@ public class APICaller {
     }
 
     // method to get current weatherbtn conditions
-    // TODO: make async
     public JSONObject getWeatherNow(LocalDateTime now) throws Exception {
         JSONObject jsonRes = null;
 
@@ -295,7 +365,7 @@ public class APICaller {
         for (int i = 0; i < numTries; i++) {
             // surround API call in a try catch
             try {
-                String response = httpGet(url.toString());
+                String response = httpGet(url.toString(), null);
                 jsonRes = new JSONObject(response);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -322,60 +392,9 @@ public class APICaller {
         return jsonRes;
     }
 
-    // method to get carpark availability from URA carparks
-    // TODO: make async
-    public JSONArray checkCarparks(LocalDateTime now) throws Exception {
-        JSONObject jsonRes = null;
-        JSONArray carparkInfo = null;
-
-        // format the datetime for API call
-        String nowStr = now.toString();
-        nowStr = nowStr.substring(0, nowStr.indexOf('.'));
-        nowStr = nowStr.replace(":", "%3A");
-
-        // first build the URL
-        final StringBuilder url = new StringBuilder("https://api.data.gov.sg/v1/environment/rainfall?date_time=");
-        url.append(nowStr);
-
-        // call API
-        for (int i = 0; i < numTries; i++) {
-            // surround API call in a try catch
-            try {
-                String response = httpGet(url.toString());
-                jsonRes = new JSONObject(response);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // check the status if there was a response
-            if (jsonRes != null) {
-                // set flag as true if no error message was given
-                flag = !(jsonRes.has("message"));
-            }
-
-            // exit loop
-            if (flag) {
-                // reset flag to false
-                flag = false;
-                break;
-            } else {
-                // don't keep non-ok responses
-                System.out.println(jsonRes.getString("message"));
-                jsonRes = null;
-            }
-        }
-
-        // filter the carpark vacancy information
-        if (jsonRes != null) {
-            carparkInfo = jsonRes.getJSONArray("items").getJSONObject(0).getJSONArray("carpark_data");
-        }
-
-        return carparkInfo;
-    }
-
     // method to update CarparkList
     public ArrayList<Carpark> updateCarparks() throws Exception {
-        String response = httpGet("https://data.gov.sg/api/action/datastore_search?resource_id=139a3035-e624-4f56-b63f-89ae28d4ae4c");
+        String response = httpGet("https://data.gov.sg/api/action/datastore_search?resource_id=139a3035-e624-4f56-b63f-89ae28d4ae4c", null);
         System.out.printf("RESPONSE: %s\n", response);
         JSONObject jsonObject = new JSONObject(response);
         JSONObject result = (JSONObject) jsonObject.get("result");
@@ -388,4 +407,6 @@ public class APICaller {
         }
         return carparks;
     }
+    /* synchronous methods */
+
 }

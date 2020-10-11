@@ -81,7 +81,7 @@ public class ABCMarker {
 
     // get LatLng
     public LatLng getLatLng() {
-        return this.marker.getPosition();
+        return this.markerOptions.getPosition();
     }
 
     // get description

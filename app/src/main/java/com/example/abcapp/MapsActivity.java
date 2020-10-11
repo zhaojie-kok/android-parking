@@ -7,16 +7,16 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.location.Location;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.example.abcapp.Routes.Route;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
-import android.media.Image;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -49,24 +49,27 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.navigation.NavigationView;
 
+import org.json.JSONException;
+
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+    // Map controller
+    private MapController mapController;
 
     // Boundary classes and helpers
-    private GoogleMap mMap;
+    private static GoogleMap mMap;
     private RequestQueue requestQueue;
     private APICaller caller;
 
     // Entity Classes
-    private Weather weather;
 
     // for user address input
     private EditText startText;
     private EditText endText;
-    private Button clearStart;
-    private Button clearEnd;
     private ImageButton showStart;
     private ImageButton showEnd;
     private ABCMarker startMarker;
@@ -107,6 +110,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        /* make request queue and API caller for http API calls */
+        requestQueue = Volley.newRequestQueue(this);
+        caller = new APICaller(requestQueue);
+        /* make request queue and API caller for http API calls */
+
+        // set up the map controller asynchronously
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mapController = new MapController(mMap, MapsActivity.this, caller);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+
         // get the dimensions of the device screen for general use
         displayWidth = getResources().getDisplayMetrics().widthPixels;
         displayHeight = getResources().getDisplayMetrics().heightPixels;
@@ -118,14 +141,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // set up map and location relevant objects
         // Obtain the SupportMapFragment
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        /* make request queue and API caller for http API calls */
-        requestQueue = Volley.newRequestQueue(this);
-        caller = new APICaller(requestQueue);
-        /* make request queue and API caller for http API calls */
 
         /* make fused location client, requests and callbacks */
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -350,7 +368,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // call google directions api asynchronously
                 Toast.makeText(MapsActivity.this, "finding route", Toast.LENGTH_SHORT).show();
-                caller.getRoutes(startMarker.getLatLng(), endMarker.getLatLng(), mMap, requestQueue, potentialRoutes, MapsActivity.this);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            mapController.findRoutes(startMarker.getLatLng(), endMarker.getLatLng());
+                        } catch (Exception e) {
+                            System.out.println("|| error in finding route ||");
+                            e.printStackTrace();
+                            System.out.println("|| error in finding route ||");
+                        }
+
+                        // first access the routes that were retrieved
+                        final ArrayList<Route> foundRoutes = mapController.getRoutes();
+
+                        // Show error message if no routes were found
+                        if (foundRoutes == null) {
+                            // show the error on the UI thread
+                            MapsActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MapsActivity.this, "Unable to find a route. Please try again later", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            return;
+                        }
+
+                        // once the routes have been found, return to the UI thread to create the popup
+                        MapsActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // create a pop up for user to choose a route if a route was found
+                                createRoutesPopup(foundRoutes);
+                            }
+                        });
+                    }
+                }).start();
+//                caller.getRoutes(startMarker.getLatLng(), endMarker.getLatLng(), mMap, potentialRoutes, MapsActivity.this);
             }
         });
         /* the route searching button */
@@ -412,7 +466,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    // method to display weatherbtn popup
+    // method to display weather popup
     public void createWeatherPopup() {
         dialogBuilder = new AlertDialog.Builder(this);
         final View weatherPopup = getLayoutInflater().inflate(R.layout.weather_popup, null, false);
@@ -436,4 +490,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         dialog = dialogBuilder.create();
         dialog.show();
     }
+
+    // method to display the routes found
+    public void createRoutesPopup(ArrayList<Route> foundRoutes) {
+        // instantiate the builder for the popup
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // set the title
+        builder.setTitle("Select a Route");
+
+        // create a list of summaries for each route
+        String[] routeSummaries = new String[foundRoutes.size()];
+        StringBuilder currentSummary;
+        Route currRoute = null;
+        for (int i=0; i<foundRoutes.size(); i++) {
+            currRoute = foundRoutes.get(i);
+
+            // create the summary using relevant information from the route
+            currentSummary = new StringBuilder("Via: ");
+            currentSummary.append(currRoute.getSummary());
+            currentSummary.append("(" + currRoute.getTotalTime()/60 + "mins)");
+
+            // add the complete summary to the routeSummaries
+            routeSummaries[i] = (currentSummary.toString());
+        }
+
+        // set the choices and functionality for choice
+        builder.setItems(routeSummaries, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                try {
+                    mapController.chooseRoute(i);
+                    mapController.showRoute(i, mMap);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        System.out.println(Arrays.toString(routeSummaries));
+        // display the pop up
+        builder.show();
+    }
+    
+    // TODO: weather stuff
+//    https://stackoverflow.com/questions/6242268/repeat-a-task-with-a-time-delay/6242292#6242292
 }

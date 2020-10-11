@@ -1,5 +1,6 @@
-package com.example.abcapp;
+package com.example.abcapp.Routes;
 
+import com.example.abcapp.R;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
@@ -11,72 +12,42 @@ import java.util.List;
 public class Segment {
     private LatLng startPoint;
     private LatLng endPoint;
-    private String trafficCondition; // good, ok, bad
+    public String trafficCondition; // good, ok, bad
     private String directions;
-    private PolylineOptions polyOptions;
-    private Polyline polyline;
-    private boolean shown;
+    public PolylineOptions polyOptions;
 
     public Segment(PolylineOptions polyOptions, String directions) {
         this.polyOptions = polyOptions;
-        this.startPoint = polyline.getPoints().get(0);
-        this.endPoint = polyline.getPoints().get(polyline.getPoints().size()-1);
+        this.startPoint = polyOptions.getPoints().get(0);
+        this.endPoint = polyOptions.getPoints().get(polyOptions.getPoints().size()-1);
         this.directions = directions;
-//        updateTraffic();
     }
 
     public Segment(String encodedPoly, String directions) {
+        // decode the encodedPoly and build the polyOptions for creating the polyline
         List<LatLng> points = PolyUtil.decode(encodedPoly);
         PolylineOptions polyOptions = new PolylineOptions();
         polyOptions.addAll(points);
-        polyOptions.width(5);
+        polyOptions.color(R.color.quantum_googblue);
+//        polyOptions.color(0x0000FF);
+        polyOptions.width(10);
         this.polyOptions = polyOptions;
         this.startPoint = points.get(0);
         this.endPoint = points.get(points.size()-1);
         this.directions = directions;
-        this.shown = false;
-//        updateTraffic();
-    }
-
-    // show the polyline on the map
-    public void showSegment(GoogleMap mMap) {
-        if (this.polyline != null) {
-            polyline.remove();
-        }
-        this.polyline = mMap.addPolyline(this.polyOptions);
-        this.shown = true;
-    }
-
-    // temporarily hide the polyline
-    public void hideSegment() {
-        if (this.polyline != null) {
-            this.polyline.setVisible(false);
-        }
-        this.shown = false;
-    }
-
-    // permanently remove the polyline
-    public void removeSegment() {
-        if (this.polyline != null) {
-            this.polyline.remove();
-            this.polyline = null;
-        }
-        this.shown = false;
     }
 
     /* mutators */
-    public void updateTraffic() {
-        //TODO: call traffic api from data.gov.sg then colour the polyline accordingly
-    }
+//    public void updateTraffic(String roadCondition) {
+//        if (roadCondition == "good") {
+////            this.polyline
+//        }
+//    }
     /* mutators */
 
     /* accessors */
     public PolylineOptions getPolyOptions() {
         return polyOptions;
-    }
-
-    public Polyline getPolyline() {
-        return polyline;
     }
 
     public LatLng getStartPoint() {
@@ -94,10 +65,6 @@ public class Segment {
 
     public String getTrafficCondition() {
         return trafficCondition;
-    }
-
-    public boolean isShown() {
-        return shown;
     }
     /* accessors */
 }
