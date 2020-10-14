@@ -14,6 +14,7 @@ import com.example.abcapp.Routes.Route;
 import com.example.abcapp.Routes.Traffic;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.JsonStreamParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,21 +86,11 @@ public class APICaller {
             for (Map.Entry<String, String> item: headers.entrySet()) {
                 connection.setRequestProperty(item.getKey(), item.getValue());
             }
-            System.out.println(headers.toString());
+//            System.out.println(headers.toString());
         }
 
         // set request method to GET
         connection.setRequestMethod("GET");
-
-        System.out.println(connection.getHeaderFields());
-        Map<String, List<String>> map = connection.getHeaderFields();
-        for (String key : map.keySet()) {
-            System.out.println(key + ":");
-            List<String> values = map.get(key);
-            for (String aValue : values) {
-                System.out.println("\t" + aValue);
-            }
-        }
 
         // throw connection into an inputstream and then read the stream
         final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -303,19 +295,79 @@ public class APICaller {
         return routes;
     }
 
+    // find a walkingroute between 2 points
+    public JSONObject getWalkingRoute(LatLng startPt, LatLng endPt) throws JSONException {
+        JSONObject walkingRoute = null;
+        JSONObject jsonRes = null;
+        String response = null;
+
+        // construct the url used to make the API call
+        final StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?origin=");
+        url.append(startPt.latitude + "," + startPt.longitude);
+        url.append("&destination=");
+        url.append(endPt.latitude + "," + endPt.longitude);
+        url.append("&mode=walking");
+        url.append("&key=" + gKey);
+
+        // Call API
+        for (int i=0; i<numTries; i++) {
+            // surround API call in a try catch
+            try {
+                response = httpGet(url.toString(), null);
+                jsonRes = new JSONObject(response);
+            } catch (Exception e) {
+                System.out.println("|| walking route API exception ||");
+                e.printStackTrace();
+                System.out.println("|| walking route API exception ||");
+            }
+
+            // check if there was a response
+            if (jsonRes != null) {
+                final String status = jsonRes.getString("status");
+                // set flag as true if status is OK
+                flag = status.equals("OK");
+            }
+
+            // exit loop
+            if (flag) {
+                flag  = false;
+                break;
+            } else {
+                // don't keep non-ok responses
+                System.out.println(jsonRes.toString());
+                jsonRes = null;
+            }
+        }
+
+        if (jsonRes == null) {
+            return null;
+        }
+
+        // if a valid result was obtained, extract only the routes
+        walkingRoute = jsonRes.getJSONArray("routes").getJSONObject(0);
+
+        return walkingRoute;
+    }
+
     // method to call weatherbtn forecast API
-    public JSONObject getWeatherForecast(LocalDateTime now) throws Exception {
+    public JSONObject getWeatherForecast(Date now) throws Exception {
         String response = null;
         JSONObject jsonRes = null;
 
-        // format the datetime for API call
-        String nowStr = now.toString();
-        nowStr = nowStr.substring(0, nowStr.indexOf('.'));
-        nowStr = nowStr.replace(":", "%3A");
-
         // first build the URL
-        final StringBuilder url = new StringBuilder("https://api.data.gov.sg/v1/environment/24-hour-weather-forecast?date_time=");
-        url.append(nowStr);
+        final StringBuilder url;
+        // if the date is null then get current data
+        if (now != null) {
+            // format the datetime for API call if it is not null
+            String nowStr = now.toString();
+            nowStr = nowStr.substring(0, nowStr.indexOf('.'));
+            nowStr = nowStr.replace(":", "%3A");
+            url = new StringBuilder("https://api.data.gov.sg/v1/environment/2-hour-weather-forecast?date_time=");
+            url.append(nowStr);
+        } else {
+            url = new StringBuilder("https://api.data.gov.sg/v1/environment/2-hour-weather-forecast");
+        }
+
 
         // call API
         for (int i=0; i<numTries; i++) {
@@ -349,17 +401,22 @@ public class APICaller {
     }
 
     // method to get current weatherbtn conditions
-    public JSONObject getWeatherNow(LocalDateTime now) throws Exception {
+    public JSONObject getWeatherNow(Date now) throws Exception {
         JSONObject jsonRes = null;
 
-        // format the datetime for API call
-        String nowStr = now.toString();
-        nowStr = nowStr.substring(0, nowStr.indexOf('.'));
-        nowStr = nowStr.replace(":", "%3A");
-
         // first build the URL
-        final StringBuilder url = new StringBuilder("https://api.data.gov.sg/v1/environment/rainfall?date_time=");
-        url.append(nowStr);
+        final StringBuilder url;
+        // if the date is null then get current data
+        if (now != null) {
+            // format the datetime for API call
+            String nowStr = now.toString();
+            nowStr = nowStr.substring(0, nowStr.indexOf('.'));
+            nowStr = nowStr.replace(":", "%3A");
+            url = new StringBuilder("https://api.data.gov.sg/v1/environment/rainfall?date_time=");
+            url.append(nowStr);
+        } else {
+            url = new StringBuilder("https://api.data.gov.sg/v1/environment/rainfall");
+        }
 
         // call API
         for (int i = 0; i < numTries; i++) {
@@ -392,20 +449,48 @@ public class APICaller {
         return jsonRes;
     }
 
-    // method to update CarparkList
-    public ArrayList<Carpark> updateCarparks() throws Exception {
-        String response = httpGet("https://data.gov.sg/api/action/datastore_search?resource_id=139a3035-e624-4f56-b63f-89ae28d4ae4c", null);
-        System.out.printf("RESPONSE: %s\n", response);
-        JSONObject jsonObject = new JSONObject(response);
-        JSONObject result = (JSONObject) jsonObject.get("result");
-        JSONArray records = (JSONArray) result.get("records");
+    // method to get information about the capacity of each carpark
+    public JSONArray getCarparkAvailability() throws Exception {
+        String response;
+        JSONObject jsonRes = null;
+        JSONArray carparkAvail = null;
 
-        ArrayList<Carpark> carparks  = new ArrayList<Carpark>();
-        for (int i = 0; i < records.length(); i++){
-            System.out.printf("%d", i);
-            carparks.add(new Carpark(records.getJSONObject(i)));
+        // build the url
+        String url = "https://api.data.gov.sg/v1/transport/carpark-availability";
+
+        // make API call
+        for (int i=0; i<numTries; i++) {
+            try {
+                response = httpGet(url, null);
+                jsonRes = new JSONObject(response);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // check if there was a response
+            if (jsonRes != null) {
+                // set flag as true if the response contains a field items
+                flag = jsonRes.has("items");
+            }
+
+            // exit loop
+            if (flag) {
+                flag = false;
+                break;
+            } else {
+                // don't keep non-ok responses
+                System.out.println(jsonRes.getString("message"));
+                jsonRes = null;
+            }
         }
-        return carparks;
+
+        // return null if no valid result was obtained
+        if (jsonRes == null) {
+            return null;
+        }
+
+        carparkAvail = jsonRes.getJSONArray("items").getJSONObject(0).getJSONArray("carpark_data");
+        return carparkAvail;
     }
     /* synchronous methods */
 

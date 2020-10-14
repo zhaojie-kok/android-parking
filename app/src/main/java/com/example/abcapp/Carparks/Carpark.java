@@ -1,5 +1,8 @@
-package com.example.abcapp;
+package com.example.abcapp.Carparks;
 
+import com.example.abcapp.ABCMarker;
+import com.example.abcapp.MapController;
+import com.example.abcapp.MapsActivity;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -22,8 +25,8 @@ public class Carpark implements Serializable {
     private double rate;
     private String carparkType;
     private transient LatLng coordinates;
-    public transient int capacity;
-    public transient int availability;
+    public transient int capacity = -1;
+    public transient int availability = -1;
     private ABCMarker abcMarker;
 
 
@@ -35,8 +38,8 @@ public class Carpark implements Serializable {
 
         // the provided coordinates for the carparks are in svy21 format
         // Hence we use the parser from https://github.com/cgcai/SVY21 to convert to latitude and longitude
-        double x_coord = Double.parseDouble(carparkJSON.getString("x_coord"));
-        double y_coord = Double.parseDouble(carparkJSON.getString("y_coord"));
+        float x_coord = Float.parseFloat(carparkJSON.getString("x_coord"));
+        float y_coord = Float.parseFloat(carparkJSON.getString("y_coord"));
         LatLonCoordinate latlon_coord = new SVY21Coordinate(y_coord, x_coord).asLatLon();
         this.coordinates = new LatLng(latlon_coord.getLatitude(), latlon_coord.getLongitude());
 
@@ -50,12 +53,17 @@ public class Carpark implements Serializable {
         this.abcMarker = new ABCMarker(markerOptions, this.address, null);
     }
 
+    /* accessors */
     public String getCarparkNo() {
-        return carparkNo;
+        return this.carparkNo;
     }
 
     public LatLng getCoordinates() {
-        return coordinates;
+        return this.coordinates;
+    }
+
+    public String getAddress() {
+        return this.address;
     }
 
     // method to get the number of lots available
@@ -67,18 +75,19 @@ public class Carpark implements Serializable {
     public int getCapacity() {
         return this.capacity;
     }
+    /* accessors */
 
     // method to update the number of lots available and total number of lots
-    public void updateAvailability(int lotsAvail, int totalCapacity) {
+    public void updateAvailability(int lotsAvail, int totalCapacity, GoogleMap mMap) {
         this.capacity = totalCapacity;
         this.availability = lotsAvail;
 
         // update the ABCMarker to reflect the carpark availability
         String newInfo = "lots available: " + lotsAvail + ", total capacity: " + totalCapacity;
-        this.abcMarker.setMarker(
+        this.abcMarker.updateMarker(
                 this.abcMarker.getMarkerOptions().snippet(newInfo),
-                null,
-                false);
+                mMap,
+                this.abcMarker.isShown());
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -92,13 +101,13 @@ public class Carpark implements Serializable {
         coordinates = new LatLng(in.readDouble(), in.readDouble());
     }
 
-    // method to show a marker of the carpark on the map
-    public void showMarker(GoogleMap mMap) {
-        this.abcMarker.showMarker(mMap);
+    // method to access the carpark's ABCMarker
+    public ABCMarker getAbcMarker() {
+        return this.abcMarker;
     }
 
-    // method to remove the marker from the map
-    public void removeMarker() {
-        this.abcMarker.removeMarker();
+    // method to access the carpark type
+    public String getCarparkType() {
+        return this.carparkType;
     }
 }

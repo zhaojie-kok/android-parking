@@ -1,15 +1,8 @@
 package com.example.abcapp.Notif;
 
-import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-
-import com.example.abcapp.Carpark;
+import com.example.abcapp.Carparks.Carpark;
 
 import java.io.Serializable;
-import java.sql.Time;
 import java.util.Calendar;
 
 public class Notification implements Serializable {
@@ -49,7 +42,7 @@ public class Notification implements Serializable {
 
     public Carpark getCarpark(){ return carpark; }
 
-    public String getCarparkName(){ return carpark.getName(); }
+    public String getCarparkName(){ return carpark.getAddress(); }
 
     public boolean toggleEnabled(){
         enabled = !enabled;

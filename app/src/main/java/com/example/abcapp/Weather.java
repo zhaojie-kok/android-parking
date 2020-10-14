@@ -18,15 +18,21 @@ public class Weather {
     private JSONObject weatherJSONNow;
     private JSONObject weatherJSONForecast;
     // NEA has different coordinates for its current and forecast weatherbtn data thus need 2 hashmaps
-    private HashMap <String, LatLng> areaCoordsForecast = null;
-    private HashMap <String, LatLng> areaCoordsNow = null;
-    private HashMap<String, Object> weatherNow = null; // using objects since both datetime and Strings will be stored
-    private HashMap<String, Object> weatherForecast = null;
+    private HashMap<String, LatLng> areaCoordsForecast ;
+    private HashMap<String, LatLng> areaCoordsNow;
+    private HashMap<String, Object> weatherNow; // using objects since both datetime and Strings will be stored
+    private HashMap<String, Object> weatherForecast;
 
 
     // constructor
     Weather(JSONObject resNow, JSONObject resForecast) throws Exception{
-        // record the current weatherbtn conditions
+        // initialise the hashmaps
+        areaCoordsForecast = new HashMap<String, LatLng>();
+        areaCoordsNow = new HashMap<String, LatLng>();
+        weatherNow = new HashMap<String, Object>();
+        weatherForecast = new HashMap<String, Object>();
+
+        // record the current weather conditions
         if (resNow != null) {
             weatherJSONNow = resNow;
             JSONArray infoArr = weatherJSONNow.getJSONObject("metadata").getJSONArray("stations");
@@ -59,9 +65,10 @@ public class Weather {
             weatherNow.put("timestamp", timeStamp);
         }
 
-        // record the forecasted weatherbtn conditions
+        // record the forecasted weather conditions
         if (resForecast != null) {
             weatherJSONForecast = resForecast;
+            System.out.println(weatherJSONForecast.toString());
             JSONArray infoArr = weatherJSONForecast.getJSONArray("area_metadata");
             String name, condition;
             JSONObject coords;
@@ -95,14 +102,40 @@ public class Weather {
         }
     }
 
-    // update the current weatherbtn conditions
+
+    /* accessors */
+    // accessor for the current weather conditions
+    public HashMap<String, Object> getWeatherNow() {
+        return this.weatherNow;
+    }
+
+    // accessor for forecasted weather conditions
+    public HashMap<String, Object> getWeatherForecast() {
+        return this.weatherForecast;
+    }
+
+    // accessor for coordinates for current weather conditions
+    public HashMap <String, LatLng> getAreaCoordsNow() {
+        return this.areaCoordsNow;
+    }
+
+    // accessor for coordinates for forecasted weather conditions
+
+    public HashMap<String, LatLng> getAreaCoordsForecast() {
+        return areaCoordsForecast;
+    }
+    /* accessors */
+
+
+    /* mutators */
+    // update the current weather conditions
     public int updateWeatherNow(JSONObject resNow) throws Exception{
         if (resNow != null) {
             weatherJSONNow = resNow;
             String id;
             Double rainfall;
 
-            // next store the current weatherbtn conditions from the JSON
+            // next store the current weather conditions from the JSON
             JSONArray infoArr = weatherJSONNow.getJSONArray("items").getJSONObject(0).getJSONArray("readings");
             for (int i = 0; i < infoArr.length(); i++) {
                 id = infoArr.getJSONObject(i).getString("station_id");
@@ -120,7 +153,7 @@ public class Weather {
         }
     }
 
-    // update the forecasted weatherbtn conditions
+    // update the forecasted weather conditions
     public int updateWeatherForecast(JSONObject resForecast) throws Exception {
         if (resForecast != null) {
             weatherJSONForecast = resForecast;
@@ -146,14 +179,6 @@ public class Weather {
             return -1;
         }
     }
+    /* mutators */
 
-    // accessor for the current weather conditions
-    public HashMap<String, Object> getWeatherNow() {
-        return this.weatherNow;
-    }
-
-    // accessor for forecasted weather conditions
-    public HashMap<String, Object> getWeatherForecast() {
-        return this.weatherForecast;
-    }
 }

@@ -1,8 +1,11 @@
 package com.example.abcapp;
 
 import android.content.Context;
-import android.widget.Toast;
+import android.graphics.Color;
 
+import com.example.abcapp.Carparks.Carpark;
+import com.example.abcapp.Carparks.CarparkList;
+import com.example.abcapp.Carparks.CarparkRecommender;
 import com.example.abcapp.Routes.Route;
 import com.example.abcapp.Routes.Segment;
 import com.example.abcapp.Routes.Traffic;
@@ -15,9 +18,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Array;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class MapController {
     // API caller
@@ -25,19 +34,25 @@ public class MapController {
 
     // attributes linked to map activities
     private Context context;
-    private static GoogleMap mMap;
+    public static GoogleMap mMap;
 
     // Route and traffic related attributes
     private static Traffic trafficInfo;
     private static ArrayList<Route> routes;
     private static ArrayList<Polyline> polylines;
-    private int chosenRoute;
+    private static Route walkingRoute;
+    private int chosenRoute = -1;
 
     // Weather attribute
-    private Weather weather;
+    private static Weather weather;
+
+    // Carpark attributes
+    private static String chosenCarpark;
+    private static ABCMarker chosenCarparkMarker;
+    private HashMap<String, ABCMarker> shownCarparks;
 
     // Constructor
-    public MapController(GoogleMap mMap, Context context, APICaller caller) throws InterruptedException, JSONException {
+    public MapController(final GoogleMap mMap, Context context, APICaller caller) throws InterruptedException, JSONException, IOException {
         // load the APICaller
         this.caller = caller;
 
@@ -49,28 +64,33 @@ public class MapController {
         routes = new ArrayList<Route>();
         polylines = new ArrayList<Polyline>();
 
-        // initialise the traffic attributes
+        // initialise the traffic, and carpark attributes
+        // NOTE: weather cannot be initialised here since weather requires the JSONObjects from the API call to be constructed
         MapController.trafficInfo = new Traffic();
+        shownCarparks = new HashMap<String, ABCMarker>();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     updateTraffic();
+                    updateWeather();
+                    CarparkRecommender.updateCarparks(mMap);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                } catch (JSONException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }).start();
     }
 
+    /* routes and traffic methods */
     // update traffic conditions (to be run asynchronously)
     public void updateTraffic() throws InterruptedException, JSONException {
         // get the updatedTrafficInfo by making API call then only update if a result was obtained
         JSONArray updatedTrafficInfo = caller.updateTraffic();
         if (updatedTrafficInfo != null) {
-            MapController.trafficInfo.update(caller.updateTraffic());
+            MapController.trafficInfo.update(updatedTrafficInfo);
         }
 
         // if no traffic info is available then set all segments to be blue and return
@@ -78,13 +98,13 @@ public class MapController {
             for (Route route: routes) {
                 ArrayList<Segment> segments = route.segments;
                 for (Segment segment: segments) {
-                    segment.polyOptions.color(R.color.quantum_googblue);
+                    segment.polyOptions.color(Color.BLUE);
                 }
             }
             return;
         }
 
-        // update the routes with the new traffic info
+        // update the non-walking routes with the new traffic info
         for (Route route: routes) {
             ArrayList<Segment> segments = route.segments;
 
@@ -137,18 +157,21 @@ public class MapController {
                 }
 
                 if (roadCondition == "good") {
-                    segment.polyOptions.color(R.color.quantum_googgreen);
+                    segment.setColor(Color.GREEN);
                 } else if (roadCondition == "ok") {
-                    segment.polyOptions.color(R.color.quantum_orange);
+                    segment.setColor(Color.YELLOW);
                 } else if (roadCondition == "bad") {
-                    segment.polyOptions.color(R.color.quantum_googred);
+                    segment.setColor(Color.RED);
                 } else { // no information available
-                    segment.polyOptions.color(R.color.quantum_googblue);
+                    segment.setColor(Color.BLUE);
                 }
             }
         }
 
-        System.out.println(trafficInfo.getAllInfo().toString()); // this line is only for debugging
+        // redisplay the route after updating the colour
+        if (chosenRoute > -1) {
+            showRoute(getChosenRoute(), mMap);
+        }
     }
 
     // set the list of routes
@@ -172,6 +195,29 @@ public class MapController {
         // overwrite the existing routes with the newRoutes
         setRoutes(newRoutes);
     }
+
+    // method to find route from start to mid point by driving, then walking to the end point
+    public void findRoutes(LatLng startPt, LatLng carpark, LatLng endPt) throws Exception {
+        JSONArray routesFound = caller.getRoutes(startPt, carpark);
+        JSONObject currRoute = null;
+
+        // create an empty arraylist to hold the new routes
+        ArrayList<Route> newRoutes = new ArrayList<Route>();
+
+        for (int i=0; i<routesFound.length(); i++) {
+            currRoute = routesFound.getJSONObject(i);
+            newRoutes.add(new Route(currRoute));
+        }
+
+        // overwrite the existing routes with the newRoutes
+        setRoutes(newRoutes);
+
+        // next find a way to walk from the carpark to the end point
+        JSONObject walkingRoute = caller.getWalkingRoute(carpark, endPt);
+        this.walkingRoute = new Route(walkingRoute);
+        this.walkingRoute.setColor(Color.CYAN);
+    }
+
     // method to access the routes
     public ArrayList<Route> getRoutes() {
         return routes;
@@ -204,15 +250,165 @@ public class MapController {
         for (Segment segment: choiceRoute.segments) {
             polylines.add(mMap.addPolyline(segment.polyOptions));
         }
+
+        // display the walkingRoute if it exists
+        if (this.walkingRoute != null) {
+            for (Segment segment: this.walkingRoute.segments) {
+                polylines.add(mMap.addPolyline(segment.polyOptions));
+            }
+        }
+    }
+    /* routes and traffic methods */
+
+
+    /* weather methods */
+    // method to update the weather conditions
+    public void updateWeather() throws Exception {
+        JSONObject weatherForecast = caller.getWeatherForecast(null);
+        JSONObject weatherNow = caller.getWeatherNow(null);
+
+        if (this.weather == null) {
+            weather = new Weather(weatherNow, weatherForecast);
+            return;
+        } else {
+            this.weather.updateWeatherNow(weatherNow);
+            this.weather.updateWeatherForecast(weatherForecast);
+        }
     }
 
-    // method to get current weather conditions
+    // method to get weather conditions at a certain location
+    public HashMap<String, Object> getWeatherAt(LatLng location) {
+        // instantiate a hashmap to return the results found
+        HashMap<String, Object> weatherAt = new HashMap<String, Object>();
+
+        // get the coordinates of the stations from NEA for their current and forecast weather conditions
+        HashMap <String, LatLng> weatherNowCoords = this.weather.getAreaCoordsNow();
+        HashMap <String, LatLng> weatherForecastCoords = this.weather.getAreaCoordsForecast();
+
+        // variables to store the station id nearest to the given location
+        double currDist;
+        double nowDist = Double.MAX_VALUE;
+        double forecastDist = Double.MAX_VALUE;
+        String nearestNow = null;
+        String nearestForecast = null;
+
+        // first find the station id from weatherNowCoords that's closest to the given location
+        for (HashMap.Entry<String, LatLng> station: weatherNowCoords.entrySet()) {
+            currDist = findDist(location, station.getValue());
+            if (currDist < nowDist) {
+                nowDist = currDist;
+                nearestNow = station.getKey();
+            }
+        }
+
+        // do the same for the weatherForecastCoords
+        for (HashMap.Entry<String, LatLng> station: weatherForecastCoords.entrySet()) {
+            currDist = findDist(location, station.getValue());
+            if (currDist < forecastDist) {
+                forecastDist = currDist;
+                nearestForecast = station.getKey();
+            }
+        }
+
+        // record the results
+        weatherAt.put("now", this.getWeatherNow().get(nearestNow));
+        weatherAt.put("forecast", this.getWeatherForecast().get(nearestForecast));
+
+        return weatherAt;
+    }
+
+    // method to get current weather conditions everywhere
     public HashMap<String, Object> getWeatherNow() {
         return weather.getWeatherNow();
     }
 
-    // method to get the forecasted weather conditions
+    // method to get the forecasted weather conditions everywhere
     public HashMap<String, Object> getWeatherForecast() {
         return weather.getWeatherForecast();
+    }
+    /* weather methods */
+
+
+    /* carpark methods */
+    // mutator method for chosenCarpark
+    public static void chooseCarpark(String choice) {
+        MapController.chosenCarpark = choice;
+        MapController.chosenCarparkMarker = CarparkList.getCarpark(choice).getAbcMarker();
+    }
+
+    // accessor method for chosenCarpark
+    public static String getChosenCarpark() {
+        return MapController.chosenCarpark;
+    }
+
+    // method to show the chosen carpark marker
+    public static void showChosenCarpark() {
+        if (MapController.chosenCarparkMarker != null) {
+            return;
+        } else {
+            MapController.chosenCarparkMarker.showMarker(MapController.mMap);
+        }
+    }
+
+    // method to remove the chosen carpark marker
+    public static void removeChosenCarpark() {
+        if (MapController.chosenCarparkMarker == null) {
+            return;
+        } else {
+            MapController.chosenCarparkMarker.removeMarker();
+        }
+    }
+
+    // method to show nearby carparks around a certain position
+    public void showNearbyCarparks(LatLng pos, CarparkRecommender carparkRecommender, GoogleMap mMap) {
+        // first get a list of nearbyCarparks
+        ArrayList<String> nearbyCarparks = carparkRecommender.findNearbyCarparks(pos);
+
+        // next check which carparks from the existing shown carparks need to be removed
+        for (Map.Entry<String, ABCMarker> shownCarpark: this.shownCarparks.entrySet()) {
+            // if there exists a shown carpark that is not in the current nearby list, remove it
+            if (!nearbyCarparks.contains(shownCarpark.getKey())) {
+                shownCarpark.getValue().removeMarker();
+                shownCarparks.remove(shownCarpark.getKey());
+            }
+        }
+
+        // add nearby carparks that have not been shown into the shownCarparks ArrayList
+        for (String nearbyCarpark: nearbyCarparks) {
+            if (!this.shownCarparks.containsKey(nearbyCarpark)) {
+                this.shownCarparks.put(nearbyCarpark, CarparkList.getCarpark(nearbyCarpark).getAbcMarker());
+                this.shownCarparks.get(nearbyCarpark).showMarker(mMap);
+            }
+        }
+
+        for (ABCMarker abcMarker: this.shownCarparks.values()) {
+            abcMarker.showHiddenMarker();
+        }
+    }
+
+    // method to hide the nearby carparks from the map
+    public void hideNearbyCarparks() {
+        for (ABCMarker abcMarker: this.shownCarparks.values()) {
+            abcMarker.hideMarker();
+        }
+    }
+    /* carpark methods */
+
+
+    // other methods
+    // method to calculate distance between 2 points
+    private float findDist(LatLng pt1, LatLng pt2) {
+        // using the Haversine distance formula
+        double earthRadius = 6371000; // in meters
+
+        // applying the formula
+        double diffLat = Math.toRadians(pt2.latitude - pt1.latitude);
+        double diffLng = Math.toRadians(pt2.longitude - pt1.longitude);
+        double a = Math.sin(diffLat/2) * Math.sin(diffLat/2) +
+                Math.cos(Math.toRadians(pt1.latitude)) * Math.cos(Math.toRadians(pt2.latitude)) * Math.sin(diffLng/2) * Math.sin(diffLng/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        float dist = (float) (earthRadius * c);
+
+        return dist; // in meters
     }
 }

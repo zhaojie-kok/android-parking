@@ -1,5 +1,7 @@
 package com.example.abcapp.Routes;
 
+import android.graphics.Color;
+
 import com.example.abcapp.R;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
@@ -28,7 +30,7 @@ public class Segment {
         List<LatLng> points = PolyUtil.decode(encodedPoly);
         PolylineOptions polyOptions = new PolylineOptions();
         polyOptions.addAll(points);
-        polyOptions.color(R.color.quantum_googblue);
+        polyOptions.color(Color.BLUE);
 //        polyOptions.color(0x0000FF);
         polyOptions.width(10);
         this.polyOptions = polyOptions;
@@ -38,11 +40,10 @@ public class Segment {
     }
 
     /* mutators */
-//    public void updateTraffic(String roadCondition) {
-//        if (roadCondition == "good") {
-////            this.polyline
-//        }
-//    }
+    // mutator for segment polyline color
+    public void setColor(int color) {
+        this.polyOptions = polyOptions.color(color);
+    }
     /* mutators */
 
     /* accessors */

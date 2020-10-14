@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.example.abcapp.Carpark;
+import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.R;
 
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class CarparkAdapter extends ArrayAdapter<Carpark> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_search, parent, false);
         }
         TextView name = convertView.findViewById(R.id.search_name);
-        name.setText(carpark.getName());
+        name.setText(carpark.getAddress());
         return convertView;
     }
 }

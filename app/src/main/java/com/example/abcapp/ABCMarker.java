@@ -37,6 +37,11 @@ public class ABCMarker {
         this.shown = false;
     }
 
+    // show a hidden marker
+    public void showHiddenMarker() {
+        this.marker.setVisible(true);
+    }
+
     // permanently delete the marker
     public void removeMarker() {
         if (this.marker != null) {
@@ -47,14 +52,17 @@ public class ABCMarker {
     }
 
     /* mutators */
-    // create a new marker
-    public void setMarker(MarkerOptions m, GoogleMap mMap) {
-        if (this.marker != null) {
-            this.marker.remove(); // first remove the existing marker on the map
-        }
+    // update the marker
+    public void updateMarker(MarkerOptions m, GoogleMap mMap, boolean show) {
         this.markerOptions = m;
-        this.marker = mMap.addMarker(this.markerOptions);
-        this.shown = true;
+
+        if (show) {
+            if (this.marker != null) {
+                this.marker.remove();
+            }
+            this.marker = mMap.addMarker(this.markerOptions);
+            this.shown = true;
+        }
     }
 
     // change the Place object

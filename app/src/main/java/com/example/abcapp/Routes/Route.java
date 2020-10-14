@@ -72,6 +72,12 @@ public class Route {
         }
     }
 
+    // method to change the color of the segments
+    public void setColor(int newColor) {
+        for (Segment segment: segments) {
+            segment.setColor(newColor);
+        }
+    }
 
     // get the directions
     public ArrayList<String> getDirections() {

@@ -71,12 +71,6 @@
             android:textAlignment="center"
             app:srcCompat="@drawable/startbtn" />
 
-        <ImageButton
-            android:id="@+id/notifBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_baseline_notifications_24" />
-
 
     </RelativeLayout>
 

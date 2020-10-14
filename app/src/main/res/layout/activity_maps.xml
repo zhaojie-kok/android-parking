@@ -104,6 +104,17 @@
 
 
 <!--section bellow is for buttons in the map-->
+        <Button
+            android:id="@+id/chooseCarpark"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginHorizontal="75dp"
+            android:text="choose carpark"
+            map:layout_constraintEnd_toEndOf="parent"
+            map:layout_constraintStart_toStartOf="@+id/map"
+            map:layout_constraintTop_toTopOf="@+id/map"
+            tools:ignore="HardcodedText" />
+
         <ImageButton
             android:id="@+id/menuButton"
             android:layout_width="80dp"
@@ -143,11 +154,15 @@
             tools:ignore="ContentDescription,VectorDrawableCompat" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!--the drawer menu stuff-->
     <com.google.android.material.navigation.NavigationView
-        android:id="@+id/navView"
+        android:id="@+id/drawerMenu"
+        android:background="@drawable/nikola_topic_1"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity='left'
+        android:paddingVertical="200dp"
+        map:itemBackground="@color/quantum_greywhite1000"
         map:menu="@menu/menu_layout"
         tools:ignore="RtlHardcoded" />
 

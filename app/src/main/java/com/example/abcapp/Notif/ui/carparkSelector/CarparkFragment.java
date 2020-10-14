@@ -15,12 +15,10 @@ import androidx.navigation.Navigation;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.example.abcapp.APICaller;
-import com.example.abcapp.Carpark;
+import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Notif.CarparkAdapter;
-import com.example.abcapp.Notif.NotifActivity;
 import com.example.abcapp.Notif.Notification;
 import com.example.abcapp.R;
-import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 
@@ -35,8 +33,8 @@ public class CarparkFragment extends Fragment {
         APICaller apiCaller = new APICaller(requestQueue);
         ArrayList<Carpark> list = new ArrayList<>();
         try {
-            list = apiCaller.updateCarparks();
-            apiCaller.getCoords("NTU Singapore");
+            // TODO: change to read carparks from the csv instead
+//            list = apiCaller.getCarparkAddress();
         } catch (Exception e) {
             e.printStackTrace();
         }
