@@ -16,6 +16,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import libraries.qxcg.LatLonCoordinate;
 import libraries.qxcg.SVY21Coordinate;
@@ -28,7 +29,7 @@ public class Carpark implements Serializable {
     private transient LatLng coordinates;
     public transient int capacity = -1;
     public transient int availability = -1;
-    private ABCMarker abcMarker;
+    private transient ABCMarker abcMarker;
 
 
     // Constructor for creating a carpark from a JSONObject
@@ -56,7 +57,9 @@ public class Carpark implements Serializable {
         //UCS	Block 34 Upper Cross Street
         //WCB	Block 261, 262, 264 Waterloo Centre
 
-        if ((new ArrayList()).contains(this.carparkNo)){
+        if ((new ArrayList(Arrays.asList(
+                "ACB", "BBB", "BRB1", "CY", "DUXM", "HLM", "KAB",
+                "KAS", "PRM", "SLS", "SR1", "SR2", "TPM", "UCS", "WCB"))).contains(this.carparkNo)){
             rate = 1.2;
         }
         else{
@@ -136,5 +139,14 @@ public class Carpark implements Serializable {
     // method to access the carpark type
     public String getCarparkType() {
         return this.carparkType;
+    }
+
+    public double getRate(){
+        return this.rate;
+    }
+
+    // toString method for searching
+    public String toString(){
+        return this.getAddress();
     }
 }

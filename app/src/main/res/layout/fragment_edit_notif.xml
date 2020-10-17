@@ -42,7 +42,7 @@
                 android:layout_weight="0"
                 android:background="#00FFFFFF"
                 android:tint="@android:color/darker_gray"
-                app:srcCompat="@drawable/ic_baseline_delete_forever_24" />
+                app:srcCompat="@drawable/icon_delete" />
 
         </LinearLayout>
 
@@ -50,7 +50,7 @@
             android:id="@+id/timePicker"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:timePickerMode="spinner" />
+            android:timePickerMode="spinner"/>
 
 
         <TextView
@@ -100,9 +100,8 @@
 
             <TextView
                 android:id="@+id/location_name"
-                android:layout_width="0dp"
+                android:layout_width="120dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/notif_location"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
@@ -110,6 +109,8 @@
                 android:id="@+id/location_input"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="right"
                 android:text="@string/notif_hint" />
 
         </LinearLayout>
@@ -120,6 +121,7 @@
             android:background="@android:color/darker_gray" />
 
         <LinearLayout
+            android:id="@+id/arrival_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/notif_layout_margin"
@@ -128,17 +130,37 @@
 
             <TextView
                 android:id="@+id/arrival_name"
-                android:layout_width="0dp"
+                android:layout_width="120dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/notif_arrival"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
-            <TextView
-                android:id="@+id/arrival_input"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/notif_hint" />
+                android:layout_weight="1"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/arrival_input"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="@string/notif_hint" />
+
+                <TextView
+                    android:id="@+id/arrival_input2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="end" />
+
+                <TextView
+                    android:id="@+id/arrival_calculated"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="end" />
+            </LinearLayout>
 
         </LinearLayout>
         <View

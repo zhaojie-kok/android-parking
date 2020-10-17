@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/list_fragment"
-        android:name="com.example.abcapp.Notif.ui.notificationList.ListFragment"
+        android:name="com.example.abcapp.Notif.NotificationList"
         android:label="@string/title_notification"
         tools:layout="@layout/fragment_list_notif">
         <action
@@ -18,7 +18,7 @@
 
     <fragment
         android:id="@+id/carpark_fragment"
-        android:name="com.example.abcapp.Notif.ui.carparkSelector.CarparkFragment"
+        android:name="com.example.abcapp.Notif.ChooseCarpark"
         android:label="@string/title_carpark"
         tools:layout="@layout/fragment_carpark">
         <action
@@ -27,7 +27,7 @@
     </fragment>
     <fragment
         android:id="@+id/editFragment"
-        android:name="com.example.abcapp.Notif.ui.editNotification.EditFragment"
+        android:name="com.example.abcapp.Notif.EditNotif"
         android:label="EditFragment" >
         <action
             android:id="@+id/action_editFragment_to_navigation_home"

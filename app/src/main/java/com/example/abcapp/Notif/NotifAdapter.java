@@ -42,14 +42,13 @@ public class NotifAdapter extends ArrayAdapter<Notification> {
             public void onClick(View view) {
                 try {
                     notification.toggleEnabled();
-                    toggleAlarm(notification);
+                    updateAlarm(notification);
                     File file = new File(getContext().getApplicationContext().getFilesDir(), notification.getName());
                     FileOutputStream fo = new FileOutputStream(file, false);
                     ObjectOutputStream os = new ObjectOutputStream(fo);
                     os.writeObject(notification);
                     os.close();
                     fo.close();
-                    Toast.makeText(getContext(), "Notification saved!", Toast.LENGTH_SHORT).show();
                 } catch (Throwable t) {
                     Toast.makeText(getContext(), "Exception: " + t.toString(), Toast.LENGTH_LONG).show();
                 }
@@ -65,36 +64,35 @@ public class NotifAdapter extends ArrayAdapter<Notification> {
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.YEAR));
         TextView t_time = convertView.findViewById(R.id.notif_time);
+        TextView t_date = convertView.findViewById(R.id.notif_date);
 
-        s.setText(date);
+        t_date.setText(date);
         t_time.setText(time);
 
         return convertView;
     }
 
-    private void toggleAlarm(Notification notification){
-        boolean alarmUp = (PendingIntent.getBroadcast(getContext(), notification.getId(),
-                new Intent(getContext(), ReminderBroadcast.class),
-                PendingIntent.FLAG_NO_CREATE) != null);
+    private void updateAlarm(Notification notification){
+        Intent intent = new Intent(getContext(), ReminderBroadcast.class);
+        intent.putExtra("notif_id", notification.getId());
+        intent.putExtra("notif_name", notification.getName());
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), notification.getId(), intent, 0);
+        AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
 
-        if (alarmUp){
-            Intent intent = new Intent(getContext(), ReminderBroadcast.class);
-            intent.putExtra("notif_id", notification.getId());
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), notification.getId(), intent, 0);
-            AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+        boolean alarmUp = notification.isEnabled();
 
+        if (!alarmUp){
             alarmManager.cancel(pendingIntent);
             pendingIntent.cancel();
+
+            Toast.makeText(getContext(), "Notification cancelled!", Toast.LENGTH_SHORT).show();
         }
         else{
-            Intent intent = new Intent(getContext(), ReminderBroadcast.class);
-            intent.putExtra("notif_id", notification.getId());
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), notification.getId(), intent,0);
-            AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
-
             alarmManager.set(AlarmManager.RTC_WAKEUP,
                     notification.getCalendar().getTimeInMillis(),
                     pendingIntent);
+
+            Toast.makeText(getContext(), "Notification enabled!", Toast.LENGTH_SHORT).show();
         }
     }
 

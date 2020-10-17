@@ -9,6 +9,7 @@ public class Notification implements Serializable {
     private String name;
     private final int id;
     private Calendar calendar;
+    private Calendar arrival;
     private boolean enabled = true;
     private Carpark carpark = null;
 
@@ -28,21 +29,25 @@ public class Notification implements Serializable {
         this.calendar = calendar;
     }
 
+    public void setArrival(Calendar arrival) {this.arrival = arrival; }
+
     public int getId(){
-        return this.id;
+        return id;
     }
 
     public String getName(){
-        return this.name;
+        return name;
     }
 
     public Calendar getCalendar(){
-        return this.calendar;
+        return calendar;
     }
 
     public Carpark getCarpark(){ return carpark; }
 
     public String getCarparkName(){ return carpark.getAddress(); }
+
+    public Calendar getArrival(){ return arrival; }
 
     public boolean toggleEnabled(){
         enabled = !enabled;

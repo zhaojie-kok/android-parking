@@ -1,4 +1,4 @@
-package com.example.abcapp.Notif.ui.editNotification;
+package com.example.abcapp.Notif;
 
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
@@ -8,7 +8,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,8 +29,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
-import com.example.abcapp.Notif.Notification;
-import com.example.abcapp.Notif.ReminderBroadcast;
 import com.example.abcapp.R;
 
 import java.io.File;
@@ -37,11 +37,13 @@ import java.io.ObjectOutputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-public class EditFragment extends Fragment {
+public class EditNotif extends Fragment {
     EditText name;
+    String original_name;
     Notification notification;
     Switch s;
     private int cYear, cMonth, cDay, cDayOfWeek, cHour, cMinute;
+    private Calendar arrival;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -50,11 +52,28 @@ public class EditFragment extends Fragment {
 
         final View v = inflater.inflate(R.layout.fragment_edit_notif, container, false);
         notification = (Notification) getArguments().getSerializable("notif");
+        original_name = notification.getName();
 
         // Set name
         name = v.findViewById(R.id.name);
-        name.setText(notification.getName());
+        name.setText(original_name);
         name.setInputType(InputType.TYPE_CLASS_TEXT);
+        name.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                notification.setName(editable.toString());
+            }
+        });
 
         // Set switch (on if enabled, off if not)
         s = v.findViewById(R.id.notif_switch);
@@ -78,9 +97,28 @@ public class EditFragment extends Fragment {
         cHour = c.get(Calendar.HOUR_OF_DAY);
         cMinute = c.get(Calendar.MINUTE);
 
+
+        // Set date-time picker for arrival
+        final View dialogView = View.inflate(getActivity(), R.layout.date_time_picker, null);
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
+
+        final TextView arrival_time = v.findViewById(R.id.arrival_input);
+        final TextView arrival_date = v.findViewById(R.id.arrival_input2);
+        final TextView arrival_calculated = v.findViewById(R.id.arrival_calculated);
+        arrival = notification.getArrival();
+        if (arrival != null){
+            String str_arrival_time = String.format("%02d", arrival.get(Calendar.HOUR_OF_DAY)) + ":" + String.format("%02d", arrival.get(Calendar.MINUTE));
+            arrival_time.setText(str_arrival_time);
+            arrival_date.setText(formatDateString(arrival.get(Calendar.DAY_OF_WEEK),
+                    arrival.get(Calendar.DAY_OF_MONTH),
+                    arrival.get(Calendar.MONTH),
+                    arrival.get(Calendar.YEAR)));
+            updateRate(arrival_calculated);
+        }
+
         // Set dateTxt picker
         final TextView dateTxt = v.findViewById(R.id.date);
-        dateTxt.setText(getDateString(cDayOfWeek, cDay, cMonth, cYear));
+        dateTxt.setText(formatDateString(cDayOfWeek, cDay, cMonth, cYear));
         dateTxt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -92,10 +130,13 @@ public class EditFragment extends Fragment {
                             public void onDateSet(DatePicker view, int year,
                                                   int monthOfYear, int dayOfMonth) {
                                 GregorianCalendar cal = new GregorianCalendar(year, monthOfYear, dayOfMonth);
-                                dateTxt.setText(getDateString(cal.get(Calendar.DAY_OF_WEEK), dayOfMonth, monthOfYear, year));
+                                dateTxt.setText(formatDateString(cal.get(Calendar.DAY_OF_WEEK), dayOfMonth, monthOfYear, year));
                                 cYear = year;
                                 cMonth = monthOfYear;
                                 cDay = dayOfMonth;
+                                notification.setCalendar(cal);
+
+                                updateRate(arrival_calculated);
                             }
                         }, cYear, cMonth, cDay);
                 datePickerDialog.show();
@@ -103,15 +144,20 @@ public class EditFragment extends Fragment {
         });
 
         // Set time picker
-        TimePicker timePicker = v.findViewById(R.id.timePicker);
+        final TimePicker timePicker = v.findViewById(R.id.timePicker);
         timePicker.setHour(cHour);
         timePicker.setMinute(cMinute);
 
         timePicker.setOnTimeChangedListener(new TimePicker.OnTimeChangedListener() {
             @Override
             public void onTimeChanged(TimePicker timePicker, int i, int i1) {
+                Calendar cal = notification.getCalendar();
+                cal.set(Calendar.HOUR_OF_DAY, i);
+                cal.set(Calendar.MINUTE, i1);
+                notification.setCalendar(cal);
                 cHour = i;
                 cMinute = i1;
+                updateRate(arrival_calculated);
             }
         });
 
@@ -130,6 +176,55 @@ public class EditFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 switch(view.getId()){
+                    case R.id.arrival_layout:
+                        final DatePicker arrival_datePicker = (DatePicker) dialogView.findViewById(R.id.date_picker);
+                        final TimePicker arrival_timePicker = (TimePicker) dialogView.findViewById(R.id.time_picker);
+
+                        arrival_timePicker.setHour(arrival.get(Calendar.HOUR_OF_DAY));
+                        arrival_timePicker.setMinute(arrival.get(Calendar.MINUTE));
+
+                        arrival_datePicker.updateDate(arrival.get(Calendar.YEAR),
+                                arrival.get(Calendar.MONTH),
+                                arrival.get(Calendar.DAY_OF_MONTH));
+
+                        dialogView.findViewById(R.id.date_time_set).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+
+                                arrival = new GregorianCalendar(arrival_datePicker.getYear(),
+                                        arrival_datePicker.getMonth(),
+                                        arrival_datePicker.getDayOfMonth(),
+                                        arrival_timePicker.getCurrentHour(),
+                                        arrival_timePicker.getCurrentMinute());
+
+                                notification.setArrival(arrival);
+
+                                String str_arrival_time = String.format("%02d", arrival.get(Calendar.HOUR_OF_DAY)) + ":" + String.format("%02d", arrival.get(Calendar.MINUTE));
+                                arrival_time.setText(str_arrival_time);
+                                arrival_date.setText(formatDateString(arrival.get(arrival.DAY_OF_WEEK),
+                                        arrival.get(Calendar.DAY_OF_MONTH),
+                                        arrival.get(Calendar.MONTH),
+                                        arrival.get(Calendar.YEAR)));
+
+                                updateRate(arrival_calculated);
+
+                                alertDialog.dismiss();
+                            }});
+                        dialogView.findViewById(R.id.date_time_delete).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                arrival = null;
+                                notification.setArrival(null);
+                                arrival_time.setText("None");
+                                arrival_date.setText("");
+                                updateRate(arrival_calculated);
+
+                                alertDialog.dismiss();
+                            }
+                        });
+                        alertDialog.setView(dialogView);
+                        alertDialog.show();
+                        break;
                     case R.id.location_layout:
                         Bundle bundle = new Bundle();
                         bundle.putSerializable("notif", notification);
@@ -152,7 +247,7 @@ public class EditFragment extends Fragment {
                                 .setNegativeButton("No", dialogClickListener).show();
                         break;
                     case R.id.btn_save:
-                        if(!saveNotification(notification.getName())){
+                        if(!saveNotification(original_name)){
                             break;
                         };
                     default:
@@ -165,11 +260,41 @@ public class EditFragment extends Fragment {
         cancel_btn.setOnClickListener(onClickListener);
         delete_btn.setOnClickListener(onClickListener);
         v.findViewById(R.id.location_layout).setOnClickListener(onClickListener);
+        v.findViewById(R.id.arrival_layout).setOnClickListener(onClickListener);
 
         return v;
     }
 
-    private String getDateString(int dW, int d, int m, int y){
+    private void updateRate(TextView arrival_calculated){
+        if (notification.getCarpark() == null || arrival == null){
+            arrival_calculated.setText("");
+            return;
+        }
+        long difference = notification.getCalendar().getTimeInMillis() - arrival.getTimeInMillis();
+        if (difference <= 0){
+            arrival_calculated.setText("");
+            return;
+        }
+        String diff_h = "";
+        double diff_h_d = difference/3600000;
+        if (diff_h_d != 0){
+            diff_h = (int) diff_h_d + " h ";
+        }
+        String diff_m = "";
+        double diff_m_d = (difference%3600000)/60000;
+        if (diff_m_d != 0){
+            diff_m = (int) diff_m_d + " min ";
+        }
+
+        double diff_cost_d = Math.ceil(difference/(float)1800000) * notification.getCarpark().getRate();
+        String diff_cost = String.format("(~ $%.2f)", diff_cost_d);
+
+        String diff_text = "\n" + diff_h + diff_m + diff_cost;
+
+        arrival_calculated.setText(diff_text);
+    }
+
+    private String formatDateString(int dW, int d, int m, int y){
         String extra = "";
         Calendar now = Calendar.getInstance();
         if (d == now.get(Calendar.DAY_OF_MONTH) &&
@@ -194,7 +319,7 @@ public class EditFragment extends Fragment {
     }
 
     private void deleteNotification(){
-        String fileName = notification.getName();
+        String fileName = original_name;
         File file = new File(getActivity().getApplicationContext().getFilesDir(), fileName);
         file.delete();
     }
@@ -207,6 +332,7 @@ public class EditFragment extends Fragment {
         if (alarmUp){
             Intent intent = new Intent(getActivity(), ReminderBroadcast.class);
             intent.putExtra("notif_id", notification.getId());
+            intent.putExtra("notif_name", original_name);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), notification.getId(), intent, 0);
             AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
 
@@ -218,6 +344,7 @@ public class EditFragment extends Fragment {
     private void setAlarm(){
         Intent intent = new Intent(getActivity(), ReminderBroadcast.class);
         intent.putExtra("notif_id", notification.getId());
+        intent.putExtra("notif_name", notification.getName());
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), notification.getId(), intent,0);
         AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
 
@@ -232,12 +359,16 @@ public class EditFragment extends Fragment {
 
         notification.setCalendar(new GregorianCalendar(cYear, cMonth,
                 cDay, cHour, cMinute));
+        notification.setArrival(arrival);
 
         File nfile = new File(getActivity().getApplicationContext().getFilesDir(), nfileName);
         File file = new File(getActivity().getApplicationContext().getFilesDir(), fileName);
 
         // If no title, default to "Untitled"
-        if (nfileName.equals("")) {
+        if (nfileName.equals("") && original_name != "") {
+            nfileName = original_name;
+        }
+        else{
             nfileName = "Untitled";
         }
         // If file name is changed, rename the file
@@ -258,7 +389,12 @@ public class EditFragment extends Fragment {
             os.close();
             fo.close();
 
-            setAlarm();
+            if (notification.isEnabled()){
+                setAlarm();
+            }
+            else{
+                deleteAlarm();
+            }
 
             Toast.makeText(getActivity(), "Notification saved!", Toast.LENGTH_SHORT).show();
         } catch (Throwable t) {

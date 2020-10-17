@@ -8,6 +8,8 @@ import com.google.android.libraries.places.api.model.Place;
 
 import org.json.JSONObject;
 
+import java.io.Serializable;
+
 public class ABCMarker {
     private boolean shown = false;
     private Marker marker = null;
