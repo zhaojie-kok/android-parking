@@ -180,6 +180,10 @@ public class EditNotif extends Fragment {
                         final DatePicker arrival_datePicker = (DatePicker) dialogView.findViewById(R.id.date_picker);
                         final TimePicker arrival_timePicker = (TimePicker) dialogView.findViewById(R.id.time_picker);
 
+                        if (arrival == null){
+                            arrival = Calendar.getInstance();
+                        }
+
                         arrival_timePicker.setHour(arrival.get(Calendar.HOUR_OF_DAY));
                         arrival_timePicker.setMinute(arrival.get(Calendar.MINUTE));
 
@@ -361,21 +365,24 @@ public class EditNotif extends Fragment {
                 cDay, cHour, cMinute));
         notification.setArrival(arrival);
 
+        // If no title, default to "Untitled" or original name, and update notification name
+        if (nfileName.equals("") && original_name != "") {
+            nfileName = original_name;
+            notification.setName(nfileName);
+        }
+        else if (nfileName.equals("")){
+            nfileName = "Untitled";
+            notification.setName(nfileName);
+        }
+
+        // Get the old and new files in files dir
         File nfile = new File(getActivity().getApplicationContext().getFilesDir(), nfileName);
         File file = new File(getActivity().getApplicationContext().getFilesDir(), fileName);
 
-        // If no title, default to "Untitled"
-        if (nfileName.equals("") && original_name != "") {
-            nfileName = original_name;
-        }
-        else{
-            nfileName = "Untitled";
-        }
         // If file name is changed, rename the file
         if (!fileName.equals(nfileName)){
             if (!nfile.exists()) {
                 file.renameTo(nfile);
-                notification.setName(nfileName);
             }
             else {
                 Toast.makeText(getActivity(), "Cannot save notification - another notification exists with that name", Toast.LENGTH_LONG).show();
