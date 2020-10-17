@@ -43,7 +43,7 @@ public class EditFragment extends Fragment {
     Switch s;
     private int cYear, cMonth, cDay, cDayOfWeek, cHour, cMinute;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {

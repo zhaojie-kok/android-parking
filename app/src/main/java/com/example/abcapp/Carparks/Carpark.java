@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import libraries.qxcg.LatLonCoordinate;
 import libraries.qxcg.SVY21Coordinate;
@@ -35,6 +36,32 @@ public class Carpark implements Serializable {
         this.carparkType = carparkJSON.getString("car_park_type");
         this.address = carparkJSON.getString("address");
         this.carparkNo = carparkJSON.getString("car_park_no");
+
+        //List of Car Parks Within Central Area
+        //Car Park Number	Location of Car Park
+        //ACB	Block 270, 271 Albert Centre
+        //BBB	Block 232 Bras Basah Complex
+        //BRB1	Block 665 Tekka Centre
+        //CY	Block 269, 269A, 269B Cheng Yan Court
+        //DUXM	Block 1 The Pinnacle @ Duxton
+        //HLM	Block 531A Upper Cross Street
+        //KAB	Block 334 Kreta Ayer Road
+        //KAM	Block 335 Kreta Ayer Road
+        //KAS	Block 333 Kreta Ayer Road
+        //PRM	Block 33 Park Crescent
+        //SLS	Block 4 Sago Lane
+        //SR1	Block 10 Selegie Road
+        //SR2	Block 8, 9 Selegie Road
+        //TPM	Tanjong Pagar Plaza
+        //UCS	Block 34 Upper Cross Street
+        //WCB	Block 261, 262, 264 Waterloo Centre
+
+        if ((new ArrayList()).contains(this.carparkNo)){
+            rate = 1.2;
+        }
+        else{
+            rate = 0.6;
+        }
 
         // the provided coordinates for the carparks are in svy21 format
         // Hence we use the parser from https://github.com/cgcai/SVY21 to convert to latitude and longitude

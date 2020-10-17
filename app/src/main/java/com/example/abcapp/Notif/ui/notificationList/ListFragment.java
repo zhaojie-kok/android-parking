@@ -30,7 +30,6 @@ import java.util.Calendar;
 
 
 public class ListFragment extends Fragment {
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
