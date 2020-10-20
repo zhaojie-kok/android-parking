@@ -16,21 +16,17 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.abcapp.MapsActivity;
-import com.example.abcapp.Notif.NotifAdapter;
-import com.example.abcapp.Notif.Notification;
 import com.example.abcapp.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 
-public class NotificationList extends Fragment {
+public class ListFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -59,9 +55,7 @@ public class NotificationList extends Fragment {
                 while (notificationsIDList.contains(id)){
                     id += 1;
                 }
-                Calendar now = Calendar.getInstance();
-                Notification created = new Notification("Untitled "+
-                        new SimpleDateFormat("dd-MM-yy-HH:mm:ss").format(now.getTime()), id, now);
+                Notification created = NotificationManager.createNotification(id);
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("notif", created);
                 Navigation.findNavController(v).navigate(R.id.action_navigation_home_to_editFragment, bundle);
@@ -96,7 +90,7 @@ public class NotificationList extends Fragment {
         for (int f = 0; f < files.length; f++) {
             theFile = files[f];
             try{
-                Notification notification = loadNotif(theFile);
+                Notification notification = NotificationManager.loadNotif(theFile);
                 notificationsList.add(notification);
                 notificationsIDList.add(notification.getId());
             } catch (IOException e) {
@@ -105,17 +99,6 @@ public class NotificationList extends Fragment {
                 e.printStackTrace();
             }
         }
-
-    }
-
-    private Notification loadNotif(File theFile) throws IOException, ClassNotFoundException {
-        FileInputStream fi = new FileInputStream(theFile);
-        ObjectInputStream oi = new ObjectInputStream(fi);
-
-        Notification notification = (Notification) oi.readObject();
-        oi.close();
-        fi.close();
-        return notification;
     }
 
     protected ArrayList<Notification> notificationsList = new ArrayList<Notification>();

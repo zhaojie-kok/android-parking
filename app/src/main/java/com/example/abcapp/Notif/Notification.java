@@ -19,7 +19,6 @@ public class Notification implements Serializable {
         this.calendar = calendar;
     }
 
-    public void setCarpark(Carpark carpark){ this.carpark = carpark; }
 
     public void setName(String name){
         this.name = name;
@@ -28,6 +27,8 @@ public class Notification implements Serializable {
     public void setCalendar(Calendar calendar){
         this.calendar = calendar;
     }
+
+    public void setCarpark(Carpark carpark){ this.carpark = carpark; }
 
     public void setArrival(Calendar arrival) {this.arrival = arrival; }
 
