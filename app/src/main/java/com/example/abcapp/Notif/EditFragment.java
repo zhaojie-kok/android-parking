@@ -1,11 +1,7 @@
 package com.example.abcapp.Notif;
 
-import android.app.AlarmManager;
 import android.app.DatePickerDialog;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -21,7 +17,6 @@ import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -31,13 +26,10 @@ import androidx.navigation.Navigation;
 
 import com.example.abcapp.R;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-public class EditNotif extends Fragment {
+public class EditFragment extends Fragment {
     EditText name;
     String original_name;
     Notification notification;
@@ -239,8 +231,8 @@ public class EditNotif extends Fragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (which == DialogInterface.BUTTON_POSITIVE){
-                                    deleteNotification();
-                                    deleteAlarm();
+                                    NotificationManager.deleteAlarm(notification);
+                                    NotificationManager.deleteNotification(original_name);
                                     Navigation.findNavController(v).navigate(R.id.action_editFragment_to_navigation_home);
                                 }
                             }
@@ -251,7 +243,7 @@ public class EditNotif extends Fragment {
                                 .setNegativeButton("No", dialogClickListener).show();
                         break;
                     case R.id.btn_save:
-                        if(!saveNotification(original_name)){
+                        if(!NotificationManager.saveNotification(notification, original_name)){
                             break;
                         };
                     default:
@@ -320,94 +312,5 @@ public class EditNotif extends Fragment {
                 new String[]{"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
                 "Jul ", "Aug ", "Oct ", "Nov ", "Dec "}[m - 1] +
                 y;
-    }
-
-    private void deleteNotification(){
-        String fileName = original_name;
-        File file = new File(getActivity().getApplicationContext().getFilesDir(), fileName);
-        file.delete();
-    }
-
-    private void deleteAlarm(){
-        boolean alarmUp = (PendingIntent.getBroadcast(getContext(), notification.getId(),
-                new Intent(getActivity(), ReminderBroadcast.class),
-                PendingIntent.FLAG_NO_CREATE) != null);
-
-        if (alarmUp){
-            Intent intent = new Intent(getActivity(), ReminderBroadcast.class);
-            intent.putExtra("notif_id", notification.getId());
-            intent.putExtra("notif_name", original_name);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), notification.getId(), intent, 0);
-            AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-
-            alarmManager.cancel(pendingIntent);
-            pendingIntent.cancel();
-        }
-    }
-
-    private void setAlarm(){
-        Intent intent = new Intent(getActivity(), ReminderBroadcast.class);
-        intent.putExtra("notif_id", notification.getId());
-        intent.putExtra("notif_name", notification.getName());
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), notification.getId(), intent,0);
-        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-
-        alarmManager.set(AlarmManager.RTC_WAKEUP,
-                notification.getCalendar().getTimeInMillis(),
-                pendingIntent);
-    }
-
-    private boolean saveNotification(String fileName){
-        String nfileName = name.getText().toString();
-        deleteAlarm();
-
-        notification.setCalendar(new GregorianCalendar(cYear, cMonth,
-                cDay, cHour, cMinute));
-        notification.setArrival(arrival);
-
-        // If no title, default to "Untitled" or original name, and update notification name
-        if (nfileName.equals("") && original_name != "") {
-            nfileName = original_name;
-            notification.setName(nfileName);
-        }
-        else if (nfileName.equals("")){
-            nfileName = "Untitled";
-            notification.setName(nfileName);
-        }
-
-        // Get the old and new files in files dir
-        File nfile = new File(getActivity().getApplicationContext().getFilesDir(), nfileName);
-        File file = new File(getActivity().getApplicationContext().getFilesDir(), fileName);
-
-        // If file name is changed, rename the file
-        if (!fileName.equals(nfileName)){
-            if (!nfile.exists()) {
-                file.renameTo(nfile);
-            }
-            else {
-                Toast.makeText(getActivity(), "Cannot save notification - another notification exists with that name", Toast.LENGTH_LONG).show();
-                return false;
-            }
-        }
-        try {
-            FileOutputStream fo = new FileOutputStream(nfile, false);
-            ObjectOutputStream os = new ObjectOutputStream(fo);
-            os.writeObject(notification);
-            os.close();
-            fo.close();
-
-            if (notification.isEnabled()){
-                setAlarm();
-            }
-            else{
-                deleteAlarm();
-            }
-
-            Toast.makeText(getActivity(), "Notification saved!", Toast.LENGTH_SHORT).show();
-        } catch (Throwable t) {
-            Toast.makeText(getActivity(), "Exception: " + t.toString(), Toast.LENGTH_LONG).show();
-            return false;
-        }
-        return true;
     }
 }

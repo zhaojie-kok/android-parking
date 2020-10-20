@@ -43,11 +43,4 @@ public class Home extends AppCompatActivity {
         startActivity(intent);
 
     }
-
-//    // Method to change activity to NotifActivity
-//    public void openNotifActivity() {
-//        Intent intent = new Intent(this, NotifActivity.class);
-//        startActivity(intent);
-//
-//    }
 }
