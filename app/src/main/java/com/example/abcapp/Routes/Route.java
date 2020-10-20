@@ -79,7 +79,7 @@ public class Route {
         }
     }
 
-    // get the directions
+    // get the compiled directions for all the segments
     public ArrayList<String> getDirections() {
         ArrayList<String> directions = new ArrayList<String>();
         for (Segment segment: segments) {

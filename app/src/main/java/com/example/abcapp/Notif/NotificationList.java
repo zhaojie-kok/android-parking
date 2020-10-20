@@ -16,8 +16,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.abcapp.MapsActivity;
-import com.example.abcapp.Notif.NotifAdapter;
-import com.example.abcapp.Notif.Notification;
 import com.example.abcapp.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 

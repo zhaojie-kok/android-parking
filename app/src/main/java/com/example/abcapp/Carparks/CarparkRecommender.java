@@ -75,6 +75,7 @@ public class CarparkRecommender {
 
             // only record carparks that are within 200m and have a different carparkNo from the chosen carpark
             if (dist <= 1000 && !currCarpark.getCarparkNo().equals(MapController.getChosenCarpark())) {
+                System.out.println(dist);
                 nearbyCarparks.add(currCarpark.getCarparkNo());
             }
         }

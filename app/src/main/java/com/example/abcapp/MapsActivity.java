@@ -165,8 +165,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void run() {
                 try {
-                    mapController = new MapController(mMap, DisplayUI.this, caller);
-                    carparkRecommender = new CarparkRecommender(caller, DisplayUI.this);
+                    mapController = new MapController(mMap, MapsActivity.this, caller);
+                    carparkRecommender = new CarparkRecommender(caller, MapsActivity.this);
                 } catch (Exception e) {
                     System.out.println("|| error in instantiating Map Controller ||");
                     e.printStackTrace();
@@ -205,7 +205,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // Toast.makeText(MapsActivity.this, locationResult.toString(), Toast.LENGTH_SHORT).show();
                     return;
                 } else {
-                    Toast.makeText(DisplayUI.this, "location unavailable, using last know location", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "location unavailable, using last know location", Toast.LENGTH_SHORT).show();
                 }
                 // find a valid result in the returned location results to use
                 for (Location location : locationResult.getLocations()) {
@@ -224,7 +224,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         drawer = (DrawerLayout) findViewById(R.id.drawerLayout);
         drawerMenu = (NavigationView) findViewById(R.id.drawerMenu);
         navigationInstructions = new HashMap<String, List<String>>();
-        directionsAdapter = new DirectionsAdapter(DisplayUI.this, navigationInstructions, -1);
+        directionsAdapter = new DirectionsAdapter(MapsActivity.this, navigationInstructions, -1);
         expandableList = findViewById(R.id.menuInstructions);
         expandableList.setAdapter(directionsAdapter);
 
@@ -304,7 +304,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
                     }
                 } else {
-                    Toast.makeText(DisplayUI.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
                     return;
                 }
             }
@@ -314,7 +314,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 System.out.println("|| error from origin autocomplete ||");
                 System.out.println(status.getStatusMessage());
                 System.out.println("|| error from origin autocomplete ||");
-                Toast.makeText(DisplayUI.this,  "Network Error, please try again later", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this,  "Network Error, please try again later", Toast.LENGTH_SHORT).show();
             }
         });
         /* create the search bar for the origin text */
@@ -360,7 +360,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
                     }
                 } else {
-                    Toast.makeText(DisplayUI.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
                     return;
                 }
             }
@@ -370,7 +370,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 System.out.println("|| error from origin autocomplete ||");
                 System.out.println(status.getStatusMessage());
                 System.out.println("|| error from origin autocomplete ||");
-                Toast.makeText(DisplayUI.this,  "Network Error, please try again later", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this,  "Network Error, please try again later", Toast.LENGTH_SHORT).show();
             }
         });
         /* create the search bar for the destination text */
@@ -403,7 +403,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(DisplayUI.this, "finding location", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "finding location", Toast.LENGTH_SHORT).show();
                 getLocation(true);
             }
         });
@@ -414,7 +414,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
                 // show error message if the start marker doesnt exist
                 if (startMarker == null || startMarker.getMarker() == null) {
-                    Toast.makeText(DisplayUI.this, "Please search for a location first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "Please search for a location first", Toast.LENGTH_SHORT).show();
                 } else {
                     startMarker.showMarker(mMap);
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startMarker.getLatLng(), 15.0f));
@@ -428,7 +428,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
                 // show error message if the end marker doesn't exist
                 if (endMarker == null || endMarker.getMarker() == null) {
-                    Toast.makeText(DisplayUI.this, "Please search for a location first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "Please search for a location first", Toast.LENGTH_SHORT).show();
                 } else {
                     endMarker.showMarker(mMap);
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(endMarker.getLatLng(), 15.0f));
@@ -442,7 +442,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
                 // show error message to prompt user to get an end location if the user has not selected an end location yet
                 if (endMarker == null) {
-                    Toast.makeText(DisplayUI.this, "Set an End Location first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "Set an End Location first", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -465,22 +465,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
                 // first check if there exists a start and end location
                 if (startMarker == null || endMarker == null) {
-                    Toast.makeText(DisplayUI.this, "Please set both Start and End locations", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "Please set both Start and End locations", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 // get mapController to call google directions api asynchronously
-                Toast.makeText(DisplayUI.this, "finding route", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "finding route", Toast.LENGTH_SHORT).show();
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             // look for routes and get latest traffic conditions
                             if (carparkMarker == null) {
-                                DisplayUI.this.runOnUiThread(new Runnable() {
+                                MapsActivity.this.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Toast.makeText(DisplayUI.this, "Finding route without carpark", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(MapsActivity.this, "Finding route without carpark", Toast.LENGTH_SHORT).show();
                                     }
                                 });
                                 mapController.findRoutes(startMarker.getLatLng(), endMarker.getLatLng());
@@ -506,16 +506,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         // Show error message if no routes were found
                         if (foundRoutes == null || foundRoutes.size() == 0) {
                             // show the error on the UI thread
-                            DisplayUI.this.runOnUiThread(new Runnable() {
+                            MapsActivity.this.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Toast.makeText(DisplayUI.this, "Unable to find a route. Please try again later", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(MapsActivity.this, "Unable to find a route. Please try again later", Toast.LENGTH_SHORT).show();
                                 }
                             });
                             return;
                         }
 
-                        DisplayUI.this.runOnUiThread(new Runnable() {
+                        MapsActivity.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 // create a pop up for user to choose a route if a route was found
@@ -569,8 +569,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // getting location from fusedLocationClient
     public void getLocation(final boolean moveCam) {
-        if (ActivityCompat.checkSelfPermission(DisplayUI.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(DisplayUI.this, new String[]
+        if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MapsActivity.this, new String[]
                     {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             return;
         }
@@ -581,7 +581,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             getLocation(moveCam);
         } else {
             Task<Location> locationTask = fusedLocationClient.getLastLocation();
-            locationTask.addOnSuccessListener(DisplayUI.this, new OnSuccessListener<Location>() {
+            locationTask.addOnSuccessListener(MapsActivity.this, new OnSuccessListener<Location>() {
                 @Override
                 public void onSuccess(Location location) {
                     if (location != null) {
@@ -600,7 +600,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     } else {
                         trackingLocation = false;
-                        Toast.makeText(DisplayUI.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -628,7 +628,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             // if current location doesn't exist, then get a new location and prompt user to try again
             getLocation(false);
-            Toast.makeText(DisplayUI.this, "Unable to find location, please try again", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MapsActivity.this, "Unable to find location, please try again", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -637,7 +637,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         weatherPopup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(DisplayUI.this, "closing weather info", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "closing weather info", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
@@ -698,7 +698,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // configure based on whether any carparks are available
         // if none are available inform user
         if (recommendations == null || recommendations.size() < 1) {
-            Toast.makeText(DisplayUI.this, "Unable to find a suitable carpark", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MapsActivity.this, "Unable to find a suitable carpark", Toast.LENGTH_SHORT).show();
         } else {
             // iterate through each recommendation an retrieve relevant details
             String[] carparkDetails = new String[recommendations.size()];
@@ -736,13 +736,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             carparkMarker.removeMarker();
                         }
                         MapController.chooseCarpark(recommendations.get(i));
-                        DisplayUI.carparkMarker = CarparkList.getCarpark(recommendations.get(i)).getAbcMarker();
+                        MapsActivity.carparkMarker = CarparkList.getCarpark(recommendations.get(i)).getAbcMarker();
                         System.out.println(carparkMarker.getLatLng());
                         chooseCarpark.setText(CarparkList.getCarpark(recommendations.get(i)).getAddress());
-                        DisplayUI.this.runOnUiThread(new Runnable() {
+                        MapsActivity.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                DisplayUI.carparkMarker.showMarker(mMap);
+                                MapsActivity.carparkMarker.showMarker(mMap);
                             }
                         });
                     } catch (Exception e) {

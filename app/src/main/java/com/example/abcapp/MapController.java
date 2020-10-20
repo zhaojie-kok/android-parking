@@ -2,6 +2,7 @@ package com.example.abcapp;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.location.Location;
 
 import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
@@ -13,6 +14,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -223,6 +226,11 @@ public class MapController {
         return routes;
     }
 
+    // method to get the directions for a route
+    public ArrayList<String> getDirections(int routeIndex) {
+        return MapController.routes.get(routeIndex).getDirections();
+    }
+
     // method to set the chosenRoute
     public void chooseRoute(int choice) throws Exception {
         if (!(choice>=0 && choice<this.routes.size())) {
@@ -232,7 +240,7 @@ public class MapController {
         chosenRoute = choice;
     }
 
-    // accessor for the chosenRoute
+    // accessor for the chosenRoute's index in the list ArrayList of routes
     public int getChosenRoute() {
         return this.chosenRoute;
     }
@@ -257,6 +265,29 @@ public class MapController {
                 polylines.add(mMap.addPolyline(segment.polyOptions));
             }
         }
+    }
+
+    // find the segment along a route nearest to a point
+    public int findNearestSegment(Location prevLoc) {
+        Route selectedRoute = routes.get(this.chosenRoute);
+        double currDist = Double.MAX_VALUE;
+        Segment segment = null;
+        boolean res = false;
+        for (int i=0; i<selectedRoute.segments.size(); i++) {
+            segment = selectedRoute.segments.get(i);
+            res = PolyUtil.isLocationOnPath(
+                    new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()),
+                    segment.getPolyOptions().getPoints(),
+                    true,
+                    50);
+
+            // return true if location is along the current segment
+            if (res) {
+                return i;
+            }
+        }
+
+        return -1;
     }
     /* routes and traffic methods */
 

@@ -112,8 +112,17 @@
             android:text="choose carpark"
             map:layout_constraintEnd_toEndOf="parent"
             map:layout_constraintStart_toStartOf="@+id/map"
-            map:layout_constraintTop_toTopOf="@+id/map"
+            map:layout_constraintTop_toBottomOf="@+id/destText"
             tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/directionBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            map:layout_constraintTop_toBottomOf="@id/chooseCarpark"
+            map:layout_constraintStart_toStartOf="parent"
+            map:layout_constraintEnd_toEndOf="parent"/>
 
         <ImageButton
             android:id="@+id/menuButton"
@@ -164,6 +173,15 @@
         android:paddingVertical="200dp"
         map:itemBackground="@color/quantum_greywhite1000"
         map:menu="@menu/menu_layout"
-        tools:ignore="RtlHardcoded" />
+        tools:ignore="RtlHardcoded">
+
+        <ExpandableListView
+        android:id="@+id/menuInstructions"
+        android:background="@color/quantum_white_100"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="150dp"/>
+
+    </com.google.android.material.navigation.NavigationView>
 
 </androidx.drawerlayout.widget.DrawerLayout>
