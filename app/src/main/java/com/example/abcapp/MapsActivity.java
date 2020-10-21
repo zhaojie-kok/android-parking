@@ -50,10 +50,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
@@ -119,6 +122,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Route currentRoute;
     public static ArrayList<Route> potentialRoutes;
     private TextView directionBox; // for displaying the current travelling instructions
+    private Marker routeMarker;  // NOTE: this is the standard Marker provided by Android, not the ABCMarker in our class diagram
 
     // for getting location
     private ImageButton locationButton;
@@ -568,7 +572,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // request for location updates and shift map camera
         getLocation(true);
-//        Toast.makeText(this, prevLoc.toString(), Toast.LENGTH_SHORT).show();
+
+        // allow the routes to be clicked and show the mode of travel when clicked
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener()
+        {
+            @Override
+            public void onPolylineClick(Polyline polyline) {
+                // extract info form the polyline
+                List<LatLng> points = polyline.getPoints();
+                LatLng pos = points.get(points.size()/2);
+
+                if (routeMarker != null) {
+                    routeMarker.remove();
+                }
+
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(pos)
+                        .title(polyline.getTag().toString())
+                        .alpha(0.0f)
+                        .anchor((float) 0.5, (float) 0.5);
+                routeMarker = mMap.addMarker(markerOptions);
+
+//                routeMarker.setVisible(false);
+                routeMarker.showInfoWindow();
+
+                Toast.makeText(MapsActivity.this, polyline.getTag().toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // getting location from fusedLocationClient

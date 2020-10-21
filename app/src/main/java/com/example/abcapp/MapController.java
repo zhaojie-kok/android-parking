@@ -234,7 +234,14 @@ public class MapController {
 
     // method to get the directions for a route
     public ArrayList<String> getDirections(int routeIndex) {
-        return MapController.routes.get(routeIndex).getDirections();
+        ArrayList<String> directions = MapController.routes.get(routeIndex).getDirections();
+        if (MapController.walkingRoute != null) {
+            for (String direction: MapController.walkingRoute.getDirections()) {
+                directions.add(direction);
+            }
+        }
+
+        return directions;
     }
 
     // method to set the chosenRoute
@@ -261,14 +268,21 @@ public class MapController {
 
         // display the route of choice on the map
         Route choiceRoute = this.routes.get(choice);
+        Polyline newPoly;
         for (Segment segment: choiceRoute.segments) {
-            polylines.add(mMap.addPolyline(segment.polyOptions));
+            newPoly = mMap.addPolyline(segment.polyOptions);
+            newPoly.setTag("Driving Route");
+            newPoly.setClickable(true);
+            polylines.add(newPoly);
         }
 
         // display the walkingRoute if it exists
         if (this.walkingRoute != null) {
             for (Segment segment: this.walkingRoute.segments) {
-                polylines.add(mMap.addPolyline(segment.polyOptions));
+                newPoly = mMap.addPolyline(segment.polyOptions);
+                newPoly.setTag("Walking Route");
+                newPoly.setClickable(true);
+                polylines.add(newPoly);
             }
         }
     }
