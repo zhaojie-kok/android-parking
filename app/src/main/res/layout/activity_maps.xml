@@ -119,7 +119,11 @@
             android:id="@+id/directionBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@null"
+            android:background="@drawable/directions_box_background"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:text="@string/directionBoxDefault"
+            android:gravity="center"
             map:layout_constraintTop_toBottomOf="@id/chooseCarpark"
             map:layout_constraintStart_toStartOf="parent"
             map:layout_constraintEnd_toEndOf="parent"/>
@@ -174,13 +178,6 @@
         map:itemBackground="@color/quantum_greywhite1000"
         map:menu="@menu/menu_layout"
         tools:ignore="RtlHardcoded">
-
-        <ExpandableListView
-        android:id="@+id/menuInstructions"
-        android:background="@color/quantum_white_100"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="150dp"/>
 
     </com.google.android.material.navigation.NavigationView>
 

@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -35,6 +36,7 @@ import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -89,6 +91,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mapController.updateWeather();
                 mapController.updateTraffic();
                 carparkRecommender.updateCarparks(mMap);
+                updateNavigationInstructions();
                 if (carparksShown) {
                     toggleCarparks(true);
                 }
@@ -134,9 +137,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private DrawerLayout drawer;
     private NavigationView drawerMenu;
     private Switch carparkToggle;
-    private ExpandableListView expandableList;
-    private DirectionsAdapter directionsAdapter;
-    HashMap<String, List<String>> navigationInstructions;
+    ArrayList<String> navigationInstructions;
 
     // for weatherbtn pop up
     ImageButton weatherButton;
@@ -223,10 +224,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         /* make menu layout and views */
         drawer = (DrawerLayout) findViewById(R.id.drawerLayout);
         drawerMenu = (NavigationView) findViewById(R.id.drawerMenu);
-        navigationInstructions = new HashMap<String, List<String>>();
-        directionsAdapter = new DirectionsAdapter(MapsActivity.this, navigationInstructions, -1);
-        expandableList = findViewById(R.id.menuInstructions);
-        expandableList.setAdapter(directionsAdapter);
 
         // set functionality for the switch/toggle
         MenuItem carparkToggleItem = drawerMenu.getMenu().findItem(R.id.carparkToggle);
@@ -259,6 +256,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         /* make menu layout and views */
+
+        /* set up the directionsBox to show current directions */
+        directionBox = findViewById(R.id.directionBox);
+        navigationInstructions = new ArrayList<String>();
+        directionBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInstructions();
+            }
+        });
+        /* set up the directionsBox to show current directions */
 
 
         /* make text input boxes */
@@ -488,11 +496,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 mapController.findRoutes(startMarker.getLatLng(), carparkMarker.getLatLng(), endMarker.getLatLng());
                             }
 
-                            if (navigationInstructions == null) {
-                                navigationInstructions = new HashMap<>();
-                            }
-                            navigationInstructions.put("Directions", mapController.getDirections(mapController.getChosenRoute()));
-                            updateNavigationInstructions(expandableList);
+                            // check the traffic conditions
                             mapController.updateTraffic();
                         } catch (Exception e) {
                             System.out.println("|| error in finding route ||");
@@ -677,8 +681,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 try {
+                    // set the user's choice as the chosen route and show it on the map
                     mapController.chooseRoute(i);
                     mapController.showRoute(i, mMap);
+
+                    // store the new route's directions and update the navigationInstructions
+                    navigationInstructions = mapController.getDirections(mapController.getChosenRoute());
+
+                    updateNavigationInstructions();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -737,7 +747,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                         MapController.chooseCarpark(recommendations.get(i));
                         MapsActivity.carparkMarker = CarparkList.getCarpark(recommendations.get(i)).getAbcMarker();
-                        System.out.println(carparkMarker.getLatLng());
                         chooseCarpark.setText(CarparkList.getCarpark(recommendations.get(i)).getAddress());
                         MapsActivity.this.runOnUiThread(new Runnable() {
                             @Override
@@ -795,10 +804,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     // method to check navigation instructions
-    private void updateNavigationInstructions(ExpandableListView instructions) {
+    private void updateNavigationInstructions() {
         // show error message if the route was not shown yet
         if (mapController.getChosenRoute() == -1) {
-            Toast.makeText(this, "Please search for a route first", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -810,17 +818,63 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // find which segment the user is closest to
         int segmentIndex = mapController.findNearestSegment(prevLoc);
 
+        // update the text in directionBox
         if (segmentIndex == -1) {
-            Toast.makeText(this, "Too far from route!!", Toast.LENGTH_SHORT).show();
+            if (directionBox.getText().equals(getResources().getText(R.string.directionBoxDefault))) {
+                directionBox.setText("Click to view directions");
+            } else {
+                Toast.makeText(this, "Please return to the route", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            directionBox.setText(navigationInstructions.get(segmentIndex));
+        }
+    }
+
+    // show navigation instructions
+    private void showInstructions() {
+        // show error message if the route was not shown yet
+        if (mapController.getChosenRoute() == -1) {
+            Toast.makeText(this, "Please search for a route first", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (directionBox == null) {
-            directionBox = findViewById(R.id.directionBox);
-        }
-        directionBox.setBackground(getResources().getDrawable(R.drawable.directions_box_background));
-        directionBox.setText(navigationInstructions.get("Directions").get(segmentIndex));
+        int segmentIndex = mapController.findNearestSegment(prevLoc);
 
-        directionsAdapter.notifyDataSetChanged();
+        // instantiate the builder for the popup
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final View showInstructions = getLayoutInflater().inflate(R.layout.show_instructions, null, false);
+
+        // Instantiate the text view, list view, and button
+        TextView currentInstruction = showInstructions.findViewById(R.id.currentInstruction);
+        ListView instructionsListView = showInstructions.findViewById(R.id.instructionsListView);
+        Button closeButton = showInstructions.findViewById(R.id.closePopup);
+
+        // set the currentInstruction
+        if (segmentIndex < 0) {
+            currentInstruction.setText("Too far from route");
+        } else {
+            currentInstruction.setText(navigationInstructions.get(segmentIndex));
+        }
+
+        // set up the closeButton
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MapsActivity.this, "closing navigation instructions", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+
+
+        // set up the instructionsListView
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1,
+                navigationInstructions);
+        instructionsListView.setAdapter(adapter);
+
+        // display the pop up
+        builder.setView(showInstructions);
+        dialog = builder.create();
+        dialog.show();
     }
 }

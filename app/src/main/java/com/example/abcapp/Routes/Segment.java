@@ -16,16 +16,18 @@ public class Segment {
     private LatLng endPoint;
     public String trafficCondition; // good, ok, bad
     private String directions;
+    private double speed;
     public PolylineOptions polyOptions;
 
-    public Segment(PolylineOptions polyOptions, String directions) {
+    public Segment(PolylineOptions polyOptions, String directions, double speed) {
         this.polyOptions = polyOptions;
         this.startPoint = polyOptions.getPoints().get(0);
         this.endPoint = polyOptions.getPoints().get(polyOptions.getPoints().size()-1);
         this.directions = directions;
+        this.speed = speed;
     }
 
-    public Segment(String encodedPoly, String directions) {
+    public Segment(String encodedPoly, String directions, double speed) {
         // decode the encodedPoly and build the polyOptions for creating the polyline
         List<LatLng> points = PolyUtil.decode(encodedPoly);
         PolylineOptions polyOptions = new PolylineOptions();
@@ -37,6 +39,7 @@ public class Segment {
         this.startPoint = points.get(0);
         this.endPoint = points.get(points.size()-1);
         this.directions = directions;
+        this.speed = speed;
     }
 
     /* mutators */
@@ -66,6 +69,10 @@ public class Segment {
 
     public String getTrafficCondition() {
         return trafficCondition;
+    }
+
+    public double getSpeed() {
+        return this.speed;
     }
     /* accessors */
 }

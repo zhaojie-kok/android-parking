@@ -165,15 +165,21 @@ public class MapController {
                     segment.setColor(Color.YELLOW);
                 } else if (roadCondition == "bad") {
                     segment.setColor(Color.RED);
-                } else { // no information available
-                    segment.setColor(Color.BLUE);
+                } else {
+                    // use projected speed for road conditions
+                    double speed = segment.getSpeed();
+
+                    if (speed < 15) {
+                        segment.setColor(Color.RED);
+                    } else if (speed < 30) {
+                        segment.setColor(Color.YELLOW);
+                    } else if (speed > 60) {
+                        segment.setColor(Color.GREEN);
+                    } else {
+                        segment.setColor(Color.BLUE);
+                    }
                 }
             }
-        }
-
-        // redisplay the route after updating the colour
-        if (chosenRoute > -1) {
-            showRoute(getChosenRoute(), mMap);
         }
     }
 
