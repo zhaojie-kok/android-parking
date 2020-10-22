@@ -39,8 +39,6 @@ public class CarparkFragment extends Fragment {
         APICaller apiCaller = new APICaller(requestQueue);
         ArrayList<Carpark> list = new ArrayList<>();
         try {
-            // TODO: change to read carparks from the csv instead
-//            list = apiCaller.getCarparkAddress();
             HashMap hashMap = CarparkList.getCarparks();
             list = new ArrayList<Carpark>(hashMap.values());
 

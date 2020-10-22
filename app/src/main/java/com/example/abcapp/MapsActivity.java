@@ -206,11 +206,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult != null) {
-                    // TODO: remove this before deployment
-                    // Toast.makeText(MapsActivity.this, locationResult.toString(), Toast.LENGTH_SHORT).show();
                     return;
                 } else {
-                    Toast.makeText(MapsActivity.this, "location unavailable, using last know location", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "location unavailable, using last known location", Toast.LENGTH_SHORT).show();
                 }
                 // find a valid result in the returned location results to use
                 for (Location location : locationResult.getLocations()) {
@@ -823,6 +821,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // method to toggle if carparks are shown
     private void toggleCarparks(boolean state) {
+        if (prevLoc == null) {
+            Toast.makeText(this, "Location Unavailable", Toast.LENGTH_SHORT).show();
+            carparkToggle.setChecked(false);
+            return;
+        }
         if (state) {
             mapController.showNearbyCarparks(
                     new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()),
@@ -863,12 +866,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // show navigation instructions
     private void showInstructions() {
         // show error message if the route was not shown yet
+        int segmentIndex = -1;
         if (mapController.getChosenRoute() == -1) {
             Toast.makeText(this, "Please search for a route first", Toast.LENGTH_SHORT).show();
             return;
+        } else if (prevLoc == null) {
+            Toast.makeText(this, "Location Unavailable", Toast.LENGTH_SHORT).show();
+        } else {
+            segmentIndex = mapController.findNearestSegment(prevLoc);
         }
-
-        int segmentIndex = mapController.findNearestSegment(prevLoc);
 
         // instantiate the builder for the popup
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

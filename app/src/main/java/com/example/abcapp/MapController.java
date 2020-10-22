@@ -289,6 +289,10 @@ public class MapController {
 
     // find the segment along a route nearest to a point
     public int findNearestSegment(Location prevLoc) {
+        if (prevLoc == null) {
+            return -1;
+        }
+
         Route selectedRoute = routes.get(this.chosenRoute);
         double currDist = Double.MAX_VALUE;
         Segment segment = null;
