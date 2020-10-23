@@ -7,16 +7,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_centerInParent="true"
-    android:layout_gravity="center"
-    android:background="@null">
+    android:layout_gravity="center">
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/blur"
-        android:background="@android:color/transparent"
+        android:layout_height="500dp"
+        android:background="@drawable/blur"
         android:scaleType="centerCrop"
+        android:alpha="0.8"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -82,9 +81,9 @@
         android:layout_height="50dp"
         android:layout_marginHorizontal="75dp"
         android:layout_marginBottom="10dp"
-        android:background="@drawable/buttonborder"
+        android:background="@drawable/bg"
         android:text="Back"
-        android:alpha="1"
+        android:alpha="0.7"
         android:textColor="#FFFFFF"
         android:textSize="28sp"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
