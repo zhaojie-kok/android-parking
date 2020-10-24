@@ -47,29 +47,6 @@ public class APICaller {
         StrictMode.setThreadPolicy(policy);
     }
 
-    // Asynchronous method to call APIs (template method for async calls, not actually used)
-    public final void httpGetAsync(final String address, String store) throws Exception {
-        // record response
-        final StringBuilder result = new StringBuilder();
-
-        // add a http request onto the request queue
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, address, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                result.append(response);
-                System.out.println(result);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Request Failed");
-                System.out.println(address);
-            }
-        });
-
-        this.requestQueue.add(stringRequest);
-    }
-
     // Synchronous method to call APIs
     public final String httpGet(final String address, HashMap<String, String> headers) throws Exception {
         String currLine;
@@ -102,55 +79,14 @@ public class APICaller {
         return response.toString();
     }
 
-    /* asynchronous methods */
-    // method to update traffic conditions
-    public void updateTraffic(final Traffic trafficInfo) {
-        final String url = "http://datamall2.mytransport.sg/ltaodataservice/TrafficSpeedBandsv2";
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject jsonRes = new JSONObject(response);
-                    JSONArray jsonTraffic = jsonRes.getJSONArray("value");
-                    trafficInfo.update(jsonTraffic);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("|| error on getting traffic info ||");
-                System.out.println(error.toString());
-                System.out.println("|| error on getting traffic info ||");
-            }
-        })
-
-        // override the get headers method of the string request to add our own headers
-        {
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String,String> params = new HashMap<String, String>();
-                params.put("AccountKey", "9KPN2QRjSp6u57qOSD1iOQ==");
-                params.put("accept", "application/json");
-                return params;
-            }
-        };
-
-        this.requestQueue.add(stringRequest);
-    }
-    /* asynchronous methods */
-
     /* synchronous methods */
     // method to get coordinates from name/description of a place
-    public JSONObject getCoords(String name) throws Exception {
+    public JSONObject getCoords(String placeId) throws Exception {
         JSONObject jsonRes = null;
 
-        // format the name of the location then build url for API call
-        name = name.replaceAll("\\s+", "+");
-        final StringBuilder url = new StringBuilder(("https://maps.googleapis.com/maps/api/geocode/json?address="));
-        url.append("Singapore,+" + name); // add Singapore to the given name to restrict locations to singapore only
+        // url for API call
+        final StringBuilder url = new StringBuilder(("https://maps.googleapis.com/maps/api/geocode/json?place_id="));
+        url.append(placeId); // add Singapore to the given name to restrict locations to singapore only
         url.append("&key=" + gKey);
 
         for (int i = 0; i < numTries; i++) {

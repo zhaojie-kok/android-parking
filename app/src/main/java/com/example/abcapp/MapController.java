@@ -14,6 +14,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.libraries.places.api.model.Place;
 import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
@@ -448,6 +449,23 @@ public class MapController {
         }
     }
     /* carpark methods */
+
+    // method to find a location based on user input
+    public LatLng findLocation(String placeId) {
+        JSONObject res = null;
+        try {
+            res = this.caller.getCoords(placeId);
+            double lat = res.getDouble("lat");
+            double lng = res.getDouble("lng");
+            return new LatLng(lat, lng);
+        } catch (Exception e) {
+            System.out.println("|| error in getting place coordinates ||");
+            e.printStackTrace();
+            System.out.println(res.toString());
+            System.out.println("|| error in getting place coordinates ||");
+            return null;
+        }
+    }
 
 
     // other methods

@@ -18,7 +18,6 @@ import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
 import com.example.abcapp.Carparks.CarparkRecommender;
 import com.example.abcapp.Notif.NotifActivity;
-import com.example.abcapp.Routes.DirectionsAdapter;
 import com.example.abcapp.Routes.Route;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -32,7 +31,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -50,7 +48,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -80,7 +77,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // Boundary classes and helpers
     private static GoogleMap mMap;
     private RequestQueue requestQueue;
-    private APICaller caller;
 
     // objects and attributes meant for items to be checked periodically e.g: weather, traffic, carpark
     private Handler handler;
@@ -90,7 +86,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void run() {
             try {
                 // add all periodic checking methods here
-                getLocation(false);
+                getUserLocation(false);
                 mapController.updateWeather();
                 mapController.updateTraffic();
                 carparkRecommender.updateCarparks(mMap);
@@ -162,7 +158,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         /* make request queue and API caller for http API calls */
         requestQueue = Volley.newRequestQueue(this);
-        caller = new APICaller(requestQueue);
+        final APICaller caller = new APICaller(requestQueue);
         /* make request queue and API caller for http API calls */
 
         // set up the map controller and carpark recommender asynchronously
@@ -345,34 +341,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // set functionality for when user selects a suggestion
         destAutoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onPlaceSelected(@NonNull Place place) {
-                LatLng pos = place.getLatLng();
-                String name = place.getName();
-                if (pos != null) {
-                    if (endMarker != null) {
-                        endMarker.removeMarker();
+            public void onPlaceSelected(@NonNull final Place place) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final LatLng pos = findLocation(place);
+                        MapsActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showFoundLocation(pos, place, 1);
+                            }
+                        });
                     }
-                    endMarker = new ABCMarker(
-                            new MarkerOptions()
-                                    .position(pos)
-                                    .title(name)
-                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)),
-                            endText.getText().toString(), place);
-                    endMarker.showMarker(mMap);
-
-                    // focus the display on only the end point if start point doesnt exist or is not shown
-                    if (startMarker == null || (startMarker != null && !startMarker.isShown())) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15.0f));
-                    } else {
-                        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-                        builder.include(startMarker.getLatLng());
-                        builder.include(endMarker.getLatLng());
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
-                    }
-                } else {
-                    Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                }).start();
             }
 
             @Override
@@ -399,7 +380,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         weatherButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createWeatherPopup();
+                showWeatherPopup();
             }
         });
 
@@ -414,7 +395,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 Toast.makeText(MapsActivity.this, "finding location", Toast.LENGTH_SHORT).show();
-                getLocation(true);
+                getUserLocation(true);
             }
         });
 
@@ -525,7 +506,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             @Override
                             public void run() {
                                 // create a pop up for user to choose a route if a route was found
-                                createRoutesPopup(foundRoutes);
+                                showRoutesPopup(foundRoutes);
                             }
                         });
                     }
@@ -569,7 +550,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
 
         // request for location updates and shift map camera
-        getLocation(true);
+        getUserLocation(true);
 
         // allow the routes to be clicked and show the mode of travel when clicked
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener()
@@ -600,7 +581,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     // getting location from fusedLocationClient
-    public void getLocation(final boolean moveCam) {
+    public void getUserLocation(final boolean moveCam) {
         if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MapsActivity.this, new String[]
                     {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -610,7 +591,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (!trackingLocation) {
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
             trackingLocation = true;
-            getLocation(moveCam);
+            getUserLocation(moveCam);
         } else {
             Task<Location> locationTask = fusedLocationClient.getLastLocation();
             locationTask.addOnSuccessListener(MapsActivity.this, new OnSuccessListener<Location>() {
@@ -639,8 +620,75 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    // method for finding and showing a location
+    private LatLng findLocation(Place place) {
+        return mapController.findLocation(place.getId());
+    }
+
+    // method to show the location that was found
+    private void showFoundLocation(LatLng pos, Place place, int choice) {
+        String name = place.getName();
+
+        if (choice == 1) { // show the end location
+            if (pos != null) {
+                if (endMarker != null) {
+                    endMarker.removeMarker();
+                }
+                endMarker = new ABCMarker(
+                        new MarkerOptions()
+                                .position(pos)
+                                .title(name)
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)),
+                        endText.getText().toString(), place);
+                endMarker.showMarker(mMap);
+
+                // focus the display on only the end point if start point doesnt exist or is not shown
+                if (startMarker == null || (startMarker != null && !startMarker.isShown())) {
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15.0f));
+                } else {
+                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                    builder.include(startMarker.getLatLng());
+                    builder.include(endMarker.getLatLng());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
+                }
+            } else {
+                Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } else if (choice == 0) { // show the start location
+            if (pos != null) {
+                // first remove existing marker if it exists
+                if (startMarker != null) {
+                    startMarker.removeMarker();
+                }
+
+                startMarker = new ABCMarker(
+                        new MarkerOptions()
+                                .position(pos)
+                                .title(name)
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)),
+                        startText.getText().toString(), place);
+                startMarker.showMarker(mMap);
+
+                // focus the display on only the start point if endpoint doesnt exist or is not shown
+                if (endMarker == null || (endMarker != null && !endMarker.isShown())) {
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15.0f));
+                } else {
+                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                    builder.include(startMarker.getLatLng());
+                    builder.include(endMarker.getLatLng());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
+                }
+            } else {
+                Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+    }
+
     // method to display weather popup
-    public void createWeatherPopup() {
+    public void showWeatherPopup() {
         dialogBuilder = new AlertDialog.Builder(this);
         final View weatherPopup = getLayoutInflater().inflate(R.layout.weather_popup, null, false);
 
@@ -659,7 +707,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             predWeather.setText(forecastString);
         } else {
             // if current location doesn't exist, then get a new location and prompt user to try again
-            getLocation(false);
+            getUserLocation(false);
             Toast.makeText(MapsActivity.this, "Unable to find location, please try again", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -681,7 +729,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     // method to display the routes found
-    public void createRoutesPopup(ArrayList<Route> foundRoutes) {
+    public void showRoutesPopup(ArrayList<Route> foundRoutes) {
         // instantiate the builder for the popup
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -838,7 +886,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // method to check navigation instructions
     private void updateNavigationInstructions() {
-        // show error message if the route was not shown yet
         if (mapController.getChosenRoute() == -1) {
             return;
         }
