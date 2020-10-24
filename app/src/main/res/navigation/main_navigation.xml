@@ -18,7 +18,7 @@
 
     <fragment
         android:id="@+id/carpark_fragment"
-        android:name="com.example.abcapp.Notif.CarparkFragment"
+        android:name="com.example.abcapp.Notif.SelectCarparkFragment"
         android:label="@string/title_carpark"
         tools:layout="@layout/fragment_carpark">
         <action
