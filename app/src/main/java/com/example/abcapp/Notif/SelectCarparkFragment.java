@@ -25,22 +25,25 @@ import com.example.abcapp.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
-public class CarparkFragment extends Fragment {
+public class SelectCarparkFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_carpark, container, false);
+        displayCarparkList(v);
+        return v;
+    }
+
+    private void displayCarparkList(View v){
         final Notification notification = (Notification) getArguments().getSerializable("notif");
+        ListView listView = v.findViewById(R.id.listview);
 
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         APICaller apiCaller = new APICaller(requestQueue);
         ArrayList<Carpark> list = new ArrayList<>();
         try {
-            // TODO: change to read carparks from the csv instead
-//            list = apiCaller.getCarparkAddress();
+
             HashMap hashMap = CarparkList.getCarparks();
             list = new ArrayList<Carpark>(hashMap.values());
 
@@ -49,7 +52,6 @@ public class CarparkFragment extends Fragment {
         }
 
         final CarparkAdapter adapter = new CarparkAdapter(getActivity(), list);
-        ListView listView = v.findViewById(R.id.listview);
         listView.setAdapter(adapter);
 
         final SearchView searchView = v.findViewById(R.id.search_view);
@@ -79,6 +81,5 @@ public class CarparkFragment extends Fragment {
             }
         });
 
-        return v;
     }
 }

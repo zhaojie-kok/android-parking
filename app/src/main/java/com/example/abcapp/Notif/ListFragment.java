@@ -62,8 +62,15 @@ public class ListFragment extends Fragment {
             }
         });
 
-        NotifAdapter adapter = new NotifAdapter(getActivity(), notificationsList);
+
         ListView listView = v.findViewById(R.id.notif_listview);
+        displayNotifications(listView);
+
+        return v;
+    }
+
+    private void displayNotifications(ListView listView){
+        NotifAdapter adapter = new NotifAdapter(getActivity(), notificationsList);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -76,9 +83,8 @@ public class ListFragment extends Fragment {
                 Navigation.findNavController(v).navigate(R.id.action_navigation_home_to_editFragment, bundle);
             }
         });
-
-        return v;
     }
+
     private void prepareNotifications(){
         File directory = getActivity().getApplicationContext().getFilesDir();
         File[] files = directory.listFiles();

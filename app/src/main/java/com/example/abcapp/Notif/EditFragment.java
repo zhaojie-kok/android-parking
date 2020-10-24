@@ -30,24 +30,21 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 public class EditFragment extends Fragment {
-    EditText name;
-    String original_name;
-    Notification notification;
-    Switch s;
-    private int cYear, cMonth, cDay, cDayOfWeek, cHour, cMinute;
-    private Calendar arrival;
+    private String original_name;
+    private Notification notification;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        final int cYear, cMonth, cDay, cDayOfWeek;
 
         final View v = inflater.inflate(R.layout.fragment_edit_notif, container, false);
         notification = (Notification) getArguments().getSerializable("notif");
         original_name = notification.getName();
 
         // Set name
-        name = v.findViewById(R.id.name);
+        EditText name = v.findViewById(R.id.name);
         name.setText(original_name);
         name.setInputType(InputType.TYPE_CLASS_TEXT);
         name.addTextChangedListener(new TextWatcher() {
@@ -68,7 +65,7 @@ public class EditFragment extends Fragment {
         });
 
         // Set switch (on if enabled, off if not)
-        s = v.findViewById(R.id.notif_switch);
+        Switch s = v.findViewById(R.id.notif_switch);
         s.setChecked(notification.isEnabled());
 
         // If switch is clicked, update notification
@@ -86,10 +83,6 @@ public class EditFragment extends Fragment {
         cDay = c.get(Calendar.DAY_OF_MONTH);
         cDayOfWeek = c.get(Calendar.DAY_OF_WEEK);
 
-        cHour = c.get(Calendar.HOUR_OF_DAY);
-        cMinute = c.get(Calendar.MINUTE);
-
-
         // Set date-time picker for arrival
         final View dialogView = View.inflate(getActivity(), R.layout.date_time_picker, null);
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
@@ -97,7 +90,7 @@ public class EditFragment extends Fragment {
         final TextView arrival_time = v.findViewById(R.id.arrival_input);
         final TextView arrival_date = v.findViewById(R.id.arrival_input2);
         final TextView arrival_calculated = v.findViewById(R.id.arrival_calculated);
-        arrival = notification.getArrival();
+        Calendar arrival = notification.getArrival();
         if (arrival != null){
             String str_arrival_time = String.format("%02d", arrival.get(Calendar.HOUR_OF_DAY)) + ":" + String.format("%02d", arrival.get(Calendar.MINUTE));
             arrival_time.setText(str_arrival_time);
@@ -123,9 +116,6 @@ public class EditFragment extends Fragment {
                                                   int monthOfYear, int dayOfMonth) {
                                 GregorianCalendar cal = new GregorianCalendar(year, monthOfYear, dayOfMonth);
                                 dateTxt.setText(formatDateString(cal.get(Calendar.DAY_OF_WEEK), dayOfMonth, monthOfYear, year));
-                                cYear = year;
-                                cMonth = monthOfYear;
-                                cDay = dayOfMonth;
                                 notification.setCalendar(cal);
 
                                 updateRate(arrival_calculated);
@@ -137,8 +127,8 @@ public class EditFragment extends Fragment {
 
         // Set time picker
         final TimePicker timePicker = v.findViewById(R.id.timePicker);
-        timePicker.setHour(cHour);
-        timePicker.setMinute(cMinute);
+        timePicker.setHour(notification.getCalendar().get(Calendar.HOUR_OF_DAY));
+        timePicker.setMinute(notification.getCalendar().get(Calendar.MINUTE));
 
         timePicker.setOnTimeChangedListener(new TimePicker.OnTimeChangedListener() {
             @Override
@@ -147,8 +137,6 @@ public class EditFragment extends Fragment {
                 cal.set(Calendar.HOUR_OF_DAY, i);
                 cal.set(Calendar.MINUTE, i1);
                 notification.setCalendar(cal);
-                cHour = i;
-                cMinute = i1;
                 updateRate(arrival_calculated);
             }
         });
@@ -172,9 +160,10 @@ public class EditFragment extends Fragment {
                         final DatePicker arrival_datePicker = (DatePicker) dialogView.findViewById(R.id.date_picker);
                         final TimePicker arrival_timePicker = (TimePicker) dialogView.findViewById(R.id.time_picker);
 
-                        if (arrival == null){
-                            arrival = Calendar.getInstance();
+                        if (notification.getArrival() == null){
+                            notification.setArrival(Calendar.getInstance());
                         }
+                        Calendar arrival = notification.getArrival();
 
                         arrival_timePicker.setHour(arrival.get(Calendar.HOUR_OF_DAY));
                         arrival_timePicker.setMinute(arrival.get(Calendar.MINUTE));
@@ -187,7 +176,7 @@ public class EditFragment extends Fragment {
                             @Override
                             public void onClick(View view) {
 
-                                arrival = new GregorianCalendar(arrival_datePicker.getYear(),
+                                Calendar arrival = new GregorianCalendar(arrival_datePicker.getYear(),
                                         arrival_datePicker.getMonth(),
                                         arrival_datePicker.getDayOfMonth(),
                                         arrival_timePicker.getCurrentHour(),
@@ -209,7 +198,6 @@ public class EditFragment extends Fragment {
                         dialogView.findViewById(R.id.date_time_delete).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                arrival = null;
                                 notification.setArrival(null);
                                 arrival_time.setText("None");
                                 arrival_date.setText("");
@@ -261,14 +249,14 @@ public class EditFragment extends Fragment {
         return v;
     }
 
-    private void updateRate(TextView arrival_calculated){
-        if (notification.getCarpark() == null || arrival == null){
-            arrival_calculated.setText("");
+    private void updateRate(TextView rateTextView){
+        if (notification.getCarpark() == null || notification.getArrival() == null){
+            rateTextView.setText("");
             return;
         }
-        long difference = notification.getCalendar().getTimeInMillis() - arrival.getTimeInMillis();
+        long difference = notification.getCalendar().getTimeInMillis() - notification.getArrival().getTimeInMillis();
         if (difference <= 0){
-            arrival_calculated.setText("");
+            rateTextView.setText("");
             return;
         }
         String diff_h = "";
@@ -287,7 +275,7 @@ public class EditFragment extends Fragment {
 
         String diff_text = "\n" + diff_h + diff_m + diff_cost;
 
-        arrival_calculated.setText(diff_text);
+        rateTextView.setText(diff_text);
     }
 
     private String formatDateString(int dW, int d, int m, int y){
