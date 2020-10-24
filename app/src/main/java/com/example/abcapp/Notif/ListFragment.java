@@ -27,6 +27,9 @@ import java.util.Calendar;
 
 
 public class ListFragment extends Fragment {
+    protected ArrayList<Notification> notificationsList = new ArrayList<Notification>();
+    protected ArrayList<Integer> notificationsIDList = new ArrayList<Integer>();
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -106,7 +109,4 @@ public class ListFragment extends Fragment {
             }
         }
     }
-
-    protected ArrayList<Notification> notificationsList = new ArrayList<Notification>();
-    protected ArrayList<Integer> notificationsIDList = new ArrayList<Integer>();
 }
