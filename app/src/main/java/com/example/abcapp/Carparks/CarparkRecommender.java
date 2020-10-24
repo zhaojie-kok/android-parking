@@ -75,6 +75,7 @@ public class CarparkRecommender {
 
             // only record carparks that are within 200m and have a different carparkNo from the chosen carpark
             if (dist <= 1000 && !currCarpark.getCarparkNo().equals(MapController.getChosenCarpark())) {
+                System.out.println(dist);
                 nearbyCarparks.add(currCarpark.getCarparkNo());
             }
         }
@@ -88,10 +89,8 @@ public class CarparkRecommender {
 
         // interpret the weatherConditions given and determine the chance of raining
         Double weatherNow = (Double) weatherCondition.get("now");
-        String weatherForecast = (String) weatherCondition.get("forecast");
-
-        // TODO keep track of the types of weather condition forecasts provided by weather API
-        boolean chanceToRain = (weatherNow>0);
+        String weatherForecast = ((String) weatherCondition.get("forecast")).toLowerCase();
+        boolean chanceToRain = (weatherNow>0 || weatherForecast.contains("shower") || weatherForecast.contains("cloudy"));
 
         // filter out surface carparks (non-sheltered) if chanceToRain is true
         if (chanceToRain) {

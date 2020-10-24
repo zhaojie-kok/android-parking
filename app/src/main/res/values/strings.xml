@@ -27,4 +27,5 @@
   
     <string name="currentWeather">Current Weather Conditions</string>
     <string name="predictWeather">Predicted Weather Conditions</string>
+    <string name="directionBoxDefault">Please search for a route</string>
 </resources>

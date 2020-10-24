@@ -7,8 +7,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 
-import com.example.abcapp.Notif.NotifActivity;
-
 public class Home extends AppCompatActivity {
 
     private ImageButton startButton; // Start button on Home page
@@ -19,8 +17,9 @@ public class Home extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Start button
-        startButton = findViewById(R.id.startBtn);
+//         Start button
+        startButton = (ImageButton) findViewById(R.id.startButton);
+        System.out.println();
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -28,7 +27,7 @@ public class Home extends AppCompatActivity {
             }
         });
 
-        // Notif button
+//         Notif button
 //        notifButton = findViewById(R.id.notifBtn);
 //        notifButton.setOnClickListener(new View.OnClickListener() {
 //            @Override

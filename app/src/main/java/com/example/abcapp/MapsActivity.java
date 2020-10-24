@@ -18,6 +18,7 @@ import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
 import com.example.abcapp.Carparks.CarparkRecommender;
 import com.example.abcapp.Notif.NotifActivity;
+import com.example.abcapp.Routes.DirectionsAdapter;
 import com.example.abcapp.Routes.Route;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -25,15 +26,17 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -47,10 +50,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
@@ -62,6 +68,7 @@ import com.google.android.material.navigation.NavigationView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     // Map controller
@@ -87,6 +94,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mapController.updateWeather();
                 mapController.updateTraffic();
                 carparkRecommender.updateCarparks(mMap);
+                updateNavigationInstructions();
                 if (carparksShown) {
                     toggleCarparks(true);
                 }
@@ -113,6 +121,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ImageButton searchRoute;
     private Route currentRoute;
     public static ArrayList<Route> potentialRoutes;
+    private TextView directionBox; // for displaying the current travelling instructions
+    private Marker routeMarker;  // NOTE: this is the standard Marker provided by Android, not the ABCMarker in our class diagram
 
     // for getting location
     private ImageButton locationButton;
@@ -131,6 +141,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private DrawerLayout drawer;
     private NavigationView drawerMenu;
     private Switch carparkToggle;
+    ArrayList<String> navigationInstructions;
 
     // for weatherbtn pop up
     ImageButton weatherButton;
@@ -195,11 +206,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult != null) {
-                    // TODO: remove this before deployment
-                    // Toast.makeText(MapsActivity.this, locationResult.toString(), Toast.LENGTH_SHORT).show();
                     return;
                 } else {
-                    Toast.makeText(MapsActivity.this, "location unavailable, using last know location", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this, "location unavailable, using last known location", Toast.LENGTH_SHORT).show();
                 }
                 // find a valid result in the returned location results to use
                 for (Location location : locationResult.getLocations()) {
@@ -241,9 +250,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     case R.id.menuNotif:
                         goToNotifications();
                         break;
-                    case R.id.menuSettings:
-                        goToSettings();
-                        break;
                     case R.id.carparkToggle:
                         carparkToggle.setChecked(!carparkToggle.isChecked());
                 }
@@ -252,6 +258,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         /* make menu layout and views */
+
+        /* set up the directionsBox to show current directions */
+        directionBox = findViewById(R.id.directionBox);
+        navigationInstructions = new ArrayList<String>();
+        directionBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInstructions();
+            }
+        });
+        /* set up the directionsBox to show current directions */
 
 
         /* make text input boxes */
@@ -315,6 +332,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         /* create the search bar for the destination text */
         // instantiate the search bar and set fields to request, country, hint, and icon respectively
         AutocompleteSupportFragment destAutoCompleteFragment = (AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.destText);
+        // TODO: get only id, use api caller to get latlng
         destAutoCompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS));
         destAutoCompleteFragment.setCountry("SG");
         destAutoCompleteFragment.setHint("End Location");
@@ -461,7 +479,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     return;
                 }
 
-                // call google directions api asynchronously
+                // get mapController to call google directions api asynchronously
                 Toast.makeText(MapsActivity.this, "finding route", Toast.LENGTH_SHORT).show();
                 new Thread(new Runnable() {
                     @Override
@@ -480,6 +498,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 mapController.findRoutes(startMarker.getLatLng(), carparkMarker.getLatLng(), endMarker.getLatLng());
                             }
 
+                            // check the traffic conditions
                             mapController.updateTraffic();
                         } catch (Exception e) {
                             System.out.println("|| error in finding route ||");
@@ -502,14 +521,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             return;
                         }
 
-                        // once the routes have been found, get latest traffic conditions then return to the UI thread to create the popup
-                        try {
-
-                        } catch (Exception e) {
-                            System.out.println("|| error in finding route ||");
-                            e.printStackTrace();
-                            System.out.println("|| error in finding route ||");
-                        }
                         MapsActivity.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -519,7 +530,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         });
                     }
                 }).start();
-//                caller.getRoutes(startMarker.getLatLng(), endMarker.getLatLng(), mMap, potentialRoutes, MapsActivity.this);
             }
         });
         /* the route searching button */
@@ -560,7 +570,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // request for location updates and shift map camera
         getLocation(true);
-//        Toast.makeText(this, prevLoc.toString(), Toast.LENGTH_SHORT).show();
+
+        // allow the routes to be clicked and show the mode of travel when clicked
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener()
+        {
+            @Override
+            public void onPolylineClick(Polyline polyline) {
+                // extract info form the polyline
+                List<LatLng> points = polyline.getPoints();
+                LatLng pos = points.get(points.size()/2);
+
+                if (routeMarker != null) {
+                    routeMarker.remove();
+                }
+
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(pos)
+                        .title(polyline.getTag().toString())
+                        .alpha(0.0f)
+                        .anchor((float) 0.5, (float) 0.5);
+                routeMarker = mMap.addMarker(markerOptions);
+
+//                routeMarker.setVisible(false);
+                routeMarker.showInfoWindow();
+
+                Toast.makeText(MapsActivity.this, polyline.getTag().toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // getting location from fusedLocationClient
@@ -582,6 +618,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 public void onSuccess(Location location) {
                     if (location != null) {
                         prevLoc = location;
+//                        if (startMarker == null) {
+//                            startMarker = new ABCMarker(
+//                                    new MarkerOptions()
+//                                            .position(new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()))
+//                                            .title("start location")
+//                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)),
+//                                    startText.getText().toString(), null);
+//                        }
                         if (moveCam) {
                             LatLng prevLatlng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(prevLatlng, 15.0f));
@@ -665,8 +709,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 try {
+                    // set the user's choice as the chosen route and show it on the map
                     mapController.chooseRoute(i);
                     mapController.showRoute(i, mMap);
+
+                    // store the new route's directions and update the navigationInstructions
+                    navigationInstructions = mapController.getDirections(mapController.getChosenRoute());
+
+                    updateNavigationInstructions();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -725,7 +775,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                         MapController.chooseCarpark(recommendations.get(i));
                         MapsActivity.carparkMarker = CarparkList.getCarpark(recommendations.get(i)).getAbcMarker();
-                        System.out.println(carparkMarker.getLatLng());
                         chooseCarpark.setText(CarparkList.getCarpark(recommendations.get(i)).getAddress());
                         MapsActivity.this.runOnUiThread(new Runnable() {
                             @Override
@@ -770,14 +819,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
-    // method to go to Settings page
-    private void goToSettings() {
-        // TODO: Make a settings page
-        return;
-    }
-
     // method to toggle if carparks are shown
     private void toggleCarparks(boolean state) {
+        if (prevLoc == null) {
+            Toast.makeText(this, "Location Unavailable", Toast.LENGTH_SHORT).show();
+            carparkToggle.setChecked(false);
+            return;
+        }
         if (state) {
             mapController.showNearbyCarparks(
                     new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()),
@@ -786,5 +834,83 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             mapController.hideNearbyCarparks();
         }
+    }
+
+    // method to check navigation instructions
+    private void updateNavigationInstructions() {
+        // show error message if the route was not shown yet
+        if (mapController.getChosenRoute() == -1) {
+            return;
+        }
+
+        // check which segment along the route it is nearest to
+        if (prevLoc == null) {
+            Toast.makeText(this, "Unable to find location", Toast.LENGTH_SHORT).show();
+        }
+
+        // find which segment the user is closest to
+        int segmentIndex = mapController.findNearestSegment(prevLoc);
+
+        // update the text in directionBox
+        if (segmentIndex == -1) {
+            if (directionBox.getText().equals(getResources().getText(R.string.directionBoxDefault))) {
+                directionBox.setText("Click to view directions");
+            } else {
+                Toast.makeText(this, "Please return to the route", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            directionBox.setText(navigationInstructions.get(segmentIndex));
+        }
+    }
+
+    // show navigation instructions
+    private void showInstructions() {
+        // show error message if the route was not shown yet
+        int segmentIndex = -1;
+        if (mapController.getChosenRoute() == -1) {
+            Toast.makeText(this, "Please search for a route first", Toast.LENGTH_SHORT).show();
+            return;
+        } else if (prevLoc == null) {
+            Toast.makeText(this, "Location Unavailable", Toast.LENGTH_SHORT).show();
+        } else {
+            segmentIndex = mapController.findNearestSegment(prevLoc);
+        }
+
+        // instantiate the builder for the popup
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final View showInstructions = getLayoutInflater().inflate(R.layout.show_instructions, null, false);
+
+        // Instantiate the text view, list view, and button
+        TextView currentInstruction = showInstructions.findViewById(R.id.currentInstruction);
+        ListView instructionsListView = showInstructions.findViewById(R.id.instructionsListView);
+        Button closeButton = showInstructions.findViewById(R.id.closePopup);
+
+        // set the currentInstruction
+        if (segmentIndex < 0) {
+            currentInstruction.setText("Too far from route");
+        } else {
+            currentInstruction.setText(navigationInstructions.get(segmentIndex));
+        }
+
+        // set up the closeButton
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MapsActivity.this, "closing navigation instructions", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+
+
+        // set up the instructionsListView
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1,
+                navigationInstructions);
+        instructionsListView.setAdapter(adapter);
+
+        // display the pop up
+        builder.setView(showInstructions);
+        dialog = builder.create();
+        dialog.show();
     }
 }

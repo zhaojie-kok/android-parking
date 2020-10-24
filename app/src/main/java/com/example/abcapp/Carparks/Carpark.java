@@ -1,8 +1,6 @@
 package com.example.abcapp.Carparks;
 
 import com.example.abcapp.ABCMarker;
-import com.example.abcapp.MapController;
-import com.example.abcapp.MapsActivity;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;

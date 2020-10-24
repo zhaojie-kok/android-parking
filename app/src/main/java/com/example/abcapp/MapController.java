@@ -2,6 +2,7 @@ package com.example.abcapp;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.location.Location;
 
 import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
@@ -13,6 +14,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -162,15 +165,21 @@ public class MapController {
                     segment.setColor(Color.YELLOW);
                 } else if (roadCondition == "bad") {
                     segment.setColor(Color.RED);
-                } else { // no information available
-                    segment.setColor(Color.BLUE);
+                } else {
+                    // use projected speed for road conditions
+                    double speed = segment.getSpeed();
+
+                    if (speed < 15) {
+                        segment.setColor(Color.RED);
+                    } else if (speed < 30) {
+                        segment.setColor(Color.YELLOW);
+                    } else if (speed > 60) {
+                        segment.setColor(Color.GREEN);
+                    } else {
+                        segment.setColor(Color.BLUE);
+                    }
                 }
             }
-        }
-
-        // redisplay the route after updating the colour
-        if (chosenRoute > -1) {
-            showRoute(getChosenRoute(), mMap);
         }
     }
 
@@ -223,6 +232,18 @@ public class MapController {
         return routes;
     }
 
+    // method to get the directions for a route
+    public ArrayList<String> getDirections(int routeIndex) {
+        ArrayList<String> directions = MapController.routes.get(routeIndex).getDirections();
+        if (MapController.walkingRoute != null) {
+            for (String direction: MapController.walkingRoute.getDirections()) {
+                directions.add(direction);
+            }
+        }
+
+        return directions;
+    }
+
     // method to set the chosenRoute
     public void chooseRoute(int choice) throws Exception {
         if (!(choice>=0 && choice<this.routes.size())) {
@@ -232,7 +253,7 @@ public class MapController {
         chosenRoute = choice;
     }
 
-    // accessor for the chosenRoute
+    // accessor for the chosenRoute's index in the list ArrayList of routes
     public int getChosenRoute() {
         return this.chosenRoute;
     }
@@ -247,16 +268,50 @@ public class MapController {
 
         // display the route of choice on the map
         Route choiceRoute = this.routes.get(choice);
+        Polyline newPoly;
         for (Segment segment: choiceRoute.segments) {
-            polylines.add(mMap.addPolyline(segment.polyOptions));
+            newPoly = mMap.addPolyline(segment.polyOptions);
+            newPoly.setTag("Driving Route");
+            newPoly.setClickable(true);
+            polylines.add(newPoly);
         }
 
         // display the walkingRoute if it exists
         if (this.walkingRoute != null) {
             for (Segment segment: this.walkingRoute.segments) {
-                polylines.add(mMap.addPolyline(segment.polyOptions));
+                newPoly = mMap.addPolyline(segment.polyOptions);
+                newPoly.setTag("Walking Route");
+                newPoly.setClickable(true);
+                polylines.add(newPoly);
             }
         }
+    }
+
+    // find the segment along a route nearest to a point
+    public int findNearestSegment(Location prevLoc) {
+        if (prevLoc == null) {
+            return -1;
+        }
+
+        Route selectedRoute = routes.get(this.chosenRoute);
+        double currDist = Double.MAX_VALUE;
+        Segment segment = null;
+        boolean res = false;
+        for (int i=0; i<selectedRoute.segments.size(); i++) {
+            segment = selectedRoute.segments.get(i);
+            res = PolyUtil.isLocationOnPath(
+                    new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()),
+                    segment.getPolyOptions().getPoints(),
+                    true,
+                    50);
+
+            // return true if location is along the current segment
+            if (res) {
+                return i;
+            }
+        }
+
+        return -1;
     }
     /* routes and traffic methods */
 

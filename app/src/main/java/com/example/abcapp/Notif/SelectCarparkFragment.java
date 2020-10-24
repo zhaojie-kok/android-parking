@@ -43,7 +43,6 @@ public class SelectCarparkFragment extends Fragment {
         APICaller apiCaller = new APICaller(requestQueue);
         ArrayList<Carpark> list = new ArrayList<>();
         try {
-
             HashMap hashMap = CarparkList.getCarparks();
             list = new ArrayList<Carpark>(hashMap.values());
 

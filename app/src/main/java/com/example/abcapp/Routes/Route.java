@@ -65,8 +65,13 @@ public class Route {
                 // extract the encoded polyline from currStep
                 encodedPolyline = currStep.getJSONObject("polyline").getString("points");
 
+                // extract and calculate speed
+                int dist = currStep.getJSONObject("distance").getInt("value");
+                int time = currStep.getJSONObject("duration").getInt("value");
+                double speed = ((double) dist/1000) / ((double) time/3600); // calculate speed in km/h
+
                 // create a new segment from the extracted information
-                currSegment = new Segment(encodedPolyline, Instructions);
+                currSegment = new Segment(encodedPolyline, Instructions, speed);
                 segments.add(currSegment);
             }
         }
@@ -79,7 +84,7 @@ public class Route {
         }
     }
 
-    // get the directions
+    // get the compiled directions for all the segments
     public ArrayList<String> getDirections() {
         ArrayList<String> directions = new ArrayList<String>();
         for (Segment segment: segments) {
