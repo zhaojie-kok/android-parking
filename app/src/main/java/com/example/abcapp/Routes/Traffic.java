@@ -10,8 +10,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class Traffic {
-    private static JSONArray jsonData;
-    public ArrayList<LatLngBounds> roadBounds;
+    private static JSONArray trafficData;
+    public ArrayList<LatLngBounds> roads;
 
     public Traffic() {}
 
@@ -25,11 +25,11 @@ public class Traffic {
             return;
         }
 
-        Traffic.jsonData = trafficData;
+        Traffic.trafficData = trafficData;
 
         // only create the roadBounds if it is empty (i.e when constructing the class)
-        if (roadBounds == null) {
-            roadBounds = new ArrayList<LatLngBounds>();
+        if (roads == null) {
+            roads = new ArrayList<LatLngBounds>();
         }
 
         JSONObject currRoad;
@@ -51,23 +51,23 @@ public class Traffic {
             LatLngBounds currBounds = builder.build();
 
             // add the new bounds into the roadBounds arraylist if it is not yet inside, or is different from the existing one
-            if (i >= roadBounds.size()) {
-                roadBounds.add(currBounds);
-            } else if (!roadBounds.get(i).equals(currBounds)) {
-                roadBounds.set(i, currBounds);
+            if (i >= roads.size()) {
+                roads.add(currBounds);
+            } else if (!roads.get(i).equals(currBounds)) {
+                roads.set(i, currBounds);
             }
         }
     }
 
     public boolean isNull() {
-        return (jsonData == null);
+        return (trafficData == null);
     }
 
     public JSONObject getInfo(int index) throws JSONException {
-        return jsonData.getJSONObject(index);
+        return trafficData.getJSONObject(index);
     }
 
     public JSONArray getAllInfo() {
-        return jsonData;
+        return trafficData;
     }
 }

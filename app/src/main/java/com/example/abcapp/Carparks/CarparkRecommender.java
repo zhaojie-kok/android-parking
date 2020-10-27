@@ -73,8 +73,8 @@ public class CarparkRecommender {
         for (Carpark currCarpark: CarparkList.getCarparks().values()) {
             double dist = findDist(pos, currCarpark.getCoordinates());
 
-            // only record carparks that are within 200m and have a different carparkNo from the chosen carpark
-            if (dist <= 1000 && !currCarpark.getCarparkNo().equals(MapController.getChosenCarpark())) {
+            // only record carparks that are within 500m and have a different carparkNo from the chosen carpark
+            if (dist <= 500 && !currCarpark.getCarparkNo().equals(MapController.getChosenCarpark())) {
                 System.out.println(dist);
                 nearbyCarparks.add(currCarpark.getCarparkNo());
             }
@@ -88,9 +88,14 @@ public class CarparkRecommender {
         List<String> recommended = findNearbyCarparks(pos);
 
         // interpret the weatherConditions given and determine the chance of raining
-        Double weatherNow = (Double) weatherCondition.get("now");
-        String weatherForecast = ((String) weatherCondition.get("forecast")).toLowerCase();
-        boolean chanceToRain = (weatherNow>0 || weatherForecast.contains("shower") || weatherForecast.contains("cloudy"));
+        boolean chanceToRain = true; // by default assume rain
+        try {
+            Double weatherNow = (Double) weatherCondition.get("now");
+            String weatherForecast = ((String) weatherCondition.get("forecast")).toLowerCase();
+            chanceToRain = (weatherNow > 0 || weatherForecast.contains("shower") || weatherForecast.contains("cloudy"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // filter out surface carparks (non-sheltered) if chanceToRain is true
         if (chanceToRain) {
@@ -110,8 +115,8 @@ public class CarparkRecommender {
             String carparkNo = recommendedIter.next();
             float capacity = (float) CarparkList.getCarpark(carparkNo).getCapacity();
             float availability = (float) CarparkList.getCarpark(carparkNo).getAvailability();
-            float filledCapacity = availability/capacity;
-            if (filledCapacity < 0.1) {
+            float availableCapacity = availability/capacity;
+            if (availableCapacity < 0.1) {
                 recommendedIter.remove();
             }
         }

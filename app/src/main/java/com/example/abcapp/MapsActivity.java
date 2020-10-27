@@ -90,7 +90,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mapController.updateWeather();
                 mapController.updateTraffic();
                 carparkRecommender.updateCarparks(mMap);
-                updateNavigationInstructions();
+                updateNavigationInstructions(false);
                 if (carparksShown) {
                     toggleCarparks(true);
                 }
@@ -283,36 +283,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // set functionality for when user selects a suggestion
         originAutoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onPlaceSelected(Place place) {
-                LatLng pos = place.getLatLng();
-                String name = place.getName();
-                if (pos != null) {
-                    // first remove existing marker if it exists
-                    if (startMarker != null) {
-                        startMarker.removeMarker();
+            public void onPlaceSelected(@NonNull final Place place) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final LatLng pos = findLocation(place);
+                        MapsActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showFoundLocation(pos, place, 0);
+                            }
+                        });
                     }
-
-                    startMarker = new ABCMarker(
-                            new MarkerOptions()
-                                    .position(pos)
-                                    .title(name)
-                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)),
-                            startText.getText().toString(), place);
-                    startMarker.showMarker(mMap);
-
-                    // focus the display on only the start point if endpoint doesnt exist or is not shown
-                    if (endMarker == null || (endMarker != null && !endMarker.isShown())) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15.0f));
-                    } else {
-                        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-                        builder.include(startMarker.getLatLng());
-                        builder.include(endMarker.getLatLng());
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), (int) (displayWidth * 0.10)));
-                    }
-                } else {
-                    Toast.makeText(MapsActivity.this, "unable to retrieve location", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                }).start();
             }
 
             @Override
@@ -437,10 +420,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     return;
                 }
 
-                // otherwise call look for carparks near the end location and let the user choose
-                final HashMap<String, Object> weatherCondition = mapController.getWeatherAt(endMarker.getLatLng());
-                final ArrayList<String> recommendations = carparkRecommender.recommendCarparks(endMarker.getLatLng(), weatherCondition);
-                promptCarparkChoice(recommendations, weatherCondition);
+                // otherwise call look for carparks near the end location and let the user choose\
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            mapController.updateWeather();
+                            carparkRecommender.updateCarparks(mMap);
+                            final HashMap<String, Object> weatherCondition = mapController.getWeatherAt(endMarker.getLatLng());
+                            final ArrayList<String> recommendations = carparkRecommender.recommendCarparks(endMarker.getLatLng(), weatherCondition);
+                            MapsActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    promptCarparkChoice(recommendations, weatherCondition);
+                                }
+                            });
+                        } catch (Exception e) {
+                            System.out.println("|| error recommending carpark ||");
+                            e.printStackTrace();
+                            System.out.println("|| error recommending carpark ||");
+                        }
+                    }
+                }).start();
+
             }
         });
         /* make simple buttons */
@@ -506,7 +508,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             @Override
                             public void run() {
                                 // create a pop up for user to choose a route if a route was found
-                                showRoutesPopup(foundRoutes);
+                                promptRouteChoice(foundRoutes);
                             }
                         });
                     }
@@ -729,7 +731,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     // method to display the routes found
-    public void showRoutesPopup(ArrayList<Route> foundRoutes) {
+    public void promptRouteChoice(ArrayList<Route> foundRoutes) {
         // instantiate the builder for the popup
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -764,7 +766,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // store the new route's directions and update the navigationInstructions
                     navigationInstructions = mapController.getDirections(mapController.getChosenRoute());
 
-                    updateNavigationInstructions();
+                    updateNavigationInstructions(false);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -885,13 +887,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     // method to check navigation instructions
-    private void updateNavigationInstructions() {
+    private void updateNavigationInstructions(boolean showWarning) {
         if (mapController.getChosenRoute() == -1) {
             return;
         }
 
         // check which segment along the route it is nearest to
-        if (prevLoc == null) {
+        if (prevLoc == null && showWarning) {
             Toast.makeText(this, "Unable to find location", Toast.LENGTH_SHORT).show();
         }
 
@@ -912,13 +914,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // show navigation instructions
     private void showInstructions() {
+        // if previous location was unavailable, asynchronously find location
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                getUserLocation(false);
+                updateNavigationInstructions(true);
+            }
+        }).start();
+
         // show error message if the route was not shown yet
         int segmentIndex = -1;
         if (mapController.getChosenRoute() == -1) {
             Toast.makeText(this, "Please search for a route first", Toast.LENGTH_SHORT).show();
             return;
         } else if (prevLoc == null) {
-            Toast.makeText(this, "Location Unavailable", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Location Unavailable, try again", Toast.LENGTH_SHORT).show();
         } else {
             segmentIndex = mapController.findNearestSegment(prevLoc);
         }

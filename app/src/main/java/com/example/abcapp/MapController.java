@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.location.Location;
 
-import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
 import com.example.abcapp.Carparks.CarparkRecommender;
 import com.example.abcapp.Routes.Route;
@@ -14,22 +13,15 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.libraries.places.api.model.Place;
 import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class MapController {
@@ -122,8 +114,8 @@ public class MapController {
                 // find the road which the segment's start point lies in
                 // NOTE: this is a cheap heuristic, understandably a segment may cover multiple roads
                 // but finding all roads along a segment is expensive
-                for (i=0; i<MapController.trafficInfo.roadBounds.size(); i++) {
-                    LatLngBounds bounds = MapController.trafficInfo.roadBounds.get(i);
+                for (i=0; i<MapController.trafficInfo.roads.size(); i++) {
+                    LatLngBounds bounds = MapController.trafficInfo.roads.get(i);
                     if (bounds.contains(startPoint)) {
                         matched = true;
                         break;

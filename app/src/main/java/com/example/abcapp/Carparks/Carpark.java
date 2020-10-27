@@ -111,7 +111,7 @@ public class Carpark implements Serializable {
         this.availability = lotsAvail;
 
         // update the ABCMarker to reflect the carpark availability
-        String newInfo = "lots available: " + lotsAvail + ", total capacity: " + totalCapacity;
+        String newInfo = String.format("rate:$%.2f ", this.rate) + " lots available: " + lotsAvail + ", total capacity: " + totalCapacity;
         this.abcMarker.updateMarker(
                 this.abcMarker.getMarkerOptions().snippet(newInfo),
                 mMap,
