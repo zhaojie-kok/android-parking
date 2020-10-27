@@ -47,6 +47,10 @@ public class Segment {
     public void setColor(int color) {
         this.polyOptions = polyOptions.color(color);
     }
+
+    public void setTrafficCondition(String trafficCondition) {
+        this.trafficCondition = trafficCondition;
+    }
     /* mutators */
 
     /* accessors */
@@ -61,7 +65,6 @@ public class Segment {
     public LatLng getEndPoint() {
         return endPoint;
     }
-
 
     public String getDirections() {
         return this.directions;

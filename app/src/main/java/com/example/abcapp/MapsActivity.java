@@ -719,7 +719,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         weatherPopup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MapsActivity.this, "closing weather info", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
@@ -954,7 +953,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MapsActivity.this, "closing navigation instructions", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });

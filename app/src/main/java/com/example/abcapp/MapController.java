@@ -146,7 +146,7 @@ public class MapController {
                     if (speedDifference>0 && speedDifference<=2) {
                         roadCondition = "ok";
                     } else if (speedDifference>2) {
-                        roadCondition = "bad";
+                        roadCondition = "congested";
                     } else {
                         roadCondition = "good";
                     }
@@ -154,22 +154,29 @@ public class MapController {
 
                 if (roadCondition == "good") {
                     segment.setColor(Color.GREEN);
+                    segment.setTrafficCondition(roadCondition);
                 } else if (roadCondition == "ok") {
                     segment.setColor(Color.YELLOW);
-                } else if (roadCondition == "bad") {
+                    segment.setTrafficCondition(roadCondition);
+                } else if (roadCondition == "congested") {
                     segment.setColor(Color.RED);
+                    segment.setTrafficCondition(roadCondition);
                 } else {
                     // use projected speed for road conditions
                     double speed = segment.getSpeed();
 
                     if (speed < 15) {
                         segment.setColor(Color.RED);
+                        segment.setTrafficCondition("congested");
                     } else if (speed < 30) {
                         segment.setColor(Color.YELLOW);
+                        segment.setTrafficCondition("ok");
                     } else if (speed > 60) {
                         segment.setColor(Color.GREEN);
+                        segment.setTrafficCondition("good");
                     } else {
                         segment.setColor(Color.BLUE);
+                        segment.setTrafficCondition("unknown");
                     }
                 }
             }
@@ -262,9 +269,10 @@ public class MapController {
         // display the route of choice on the map
         Route choiceRoute = this.routes.get(choice);
         Polyline newPoly;
+        String trafficCondition;
         for (Segment segment: choiceRoute.segments) {
             newPoly = mMap.addPolyline(segment.polyOptions);
-            newPoly.setTag("Driving Route");
+            newPoly.setTag("Driving Route: " + segment.getTrafficCondition());
             newPoly.setClickable(true);
             polylines.add(newPoly);
         }

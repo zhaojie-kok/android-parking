@@ -87,6 +87,7 @@ public class NotificationActivity extends AppCompatActivity {
                 notificationsIDList.add(notification.getId());
             } catch (IOException e) {
                 e.printStackTrace();
+                break;
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
