@@ -17,7 +17,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
 import com.example.abcapp.Carparks.CarparkRecommender;
-import com.example.abcapp.Notif.NotifActivity;
+import com.example.abcapp.Notif.NotificationActivity;
 import com.example.abcapp.Routes.Route;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -865,7 +865,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // method to go to Notifications page
     private void goToNotifications() {
-        Intent intent = new Intent(this, NotifActivity.class);
+        Intent intent = new Intent(this, NotificationActivity.class);
         startActivity(intent);
     }
 

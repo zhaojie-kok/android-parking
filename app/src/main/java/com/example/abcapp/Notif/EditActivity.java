@@ -1,46 +1,59 @@
 package com.example.abcapp.Notif;
 
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-import androidx.navigation.Navigation;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+import com.example.abcapp.APICaller;
+import com.example.abcapp.Carparks.Carpark;
+import com.example.abcapp.Carparks.CarparkList;
 import com.example.abcapp.R;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 
-public class EditFragment extends Fragment {
+import androidx.appcompat.app.AppCompatActivity;
+
+
+public class EditActivity extends AppCompatActivity {
+
     private String original_name;
     private Notification notification;
-
+    Dialog dialog;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_notif_editor);
         final int cYear, cMonth, cDay, cDayOfWeek;
 
-        final View v = inflater.inflate(R.layout.fragment_edit_notif, container, false);
-        notification = (Notification) getArguments().getSerializable("notif");
+        final View v = this.findViewById(android.R.id.content);
+        notification = (Notification) getIntent().getExtras().getSerializable("notif");
         original_name = notification.getName();
 
         // Set name
@@ -84,8 +97,8 @@ public class EditFragment extends Fragment {
         cDayOfWeek = c.get(Calendar.DAY_OF_WEEK);
 
         // Set date-time picker for arrival
-        final View dialogView = View.inflate(getActivity(), R.layout.date_time_picker, null);
-        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
+        final View dialogView = View.inflate(this, R.layout.date_time_picker, null);
+        final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 
         final TextView arrival_time = v.findViewById(R.id.arrival_input);
         final TextView arrival_date = v.findViewById(R.id.arrival_input2);
@@ -108,7 +121,7 @@ public class EditFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 // Get Current Date
-                DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(),
+                DatePickerDialog datePickerDialog = new DatePickerDialog(EditActivity.this,
                         new DatePickerDialog.OnDateSetListener() {
 
                             @Override
@@ -210,9 +223,12 @@ public class EditFragment extends Fragment {
                         alertDialog.show();
                         break;
                     case R.id.location_layout:
-                        Bundle bundle = new Bundle();
-                        bundle.putSerializable("notif", notification);
-                        Navigation.findNavController(v).navigate(R.id.action_editFragment_to_carpark_fragment, bundle);
+                        CarparkAdapter adapter = new CarparkAdapter(EditActivity.this, getCarparkList());
+                        showSelectCarparkPopup(adapter);
+                        if (notification.getCarpark()!=null){
+                            TextView carparkTextView = v.findViewById(R.id.location_input);
+                            carparkTextView.setText(notification.getCarparkName());
+                        }
                         break;
                     case R.id.btn_delete:
                         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -221,12 +237,12 @@ public class EditFragment extends Fragment {
                                 if (which == DialogInterface.BUTTON_POSITIVE){
                                     NotificationManager.deleteAlarm(notification);
                                     NotificationManager.deleteNotification(original_name);
-                                    Navigation.findNavController(v).navigate(R.id.action_editFragment_to_navigation_home);
+                                    navigateToNotifActivity();
                                 }
                             }
                         };
 
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                        AlertDialog.Builder builder = new AlertDialog.Builder(EditActivity.this);
                         builder.setMessage("Are you sure you want to delete this?").setPositiveButton("Yes", dialogClickListener)
                                 .setNegativeButton("No", dialogClickListener).show();
                         break;
@@ -235,7 +251,7 @@ public class EditFragment extends Fragment {
                             break;
                         };
                     default:
-                        Navigation.findNavController(v).navigate(R.id.action_editFragment_to_navigation_home);
+                        navigateToNotifActivity();
                 }
             }
         };
@@ -245,8 +261,6 @@ public class EditFragment extends Fragment {
         delete_btn.setOnClickListener(onClickListener);
         v.findViewById(R.id.location_layout).setOnClickListener(onClickListener);
         v.findViewById(R.id.arrival_layout).setOnClickListener(onClickListener);
-
-        return v;
     }
 
     private void updateRate(TextView rateTextView){
@@ -300,5 +314,59 @@ public class EditFragment extends Fragment {
                 new String[]{"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
                 "Jul ", "Aug ", "Oct ", "Nov ", "Dec "}[m - 1] +
                 y;
+    }
+
+    private ArrayList<Carpark> getCarparkList(){
+        ArrayList<Carpark> list = new ArrayList<>();
+        try {
+            HashMap hashMap = CarparkList.getCarparks();
+            list = new ArrayList<Carpark>(hashMap.values());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private void showSelectCarparkPopup(final CarparkAdapter adapter) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        final View v = getLayoutInflater().inflate(R.layout.select_carpark_popup, null, false);
+
+        final SearchView searchView = v.findViewById(R.id.search_view);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                adapter.getFilter().filter(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                adapter.getFilter().filter(newText);
+                return false;
+            }
+        });
+
+        ListView listView = v.findViewById(R.id.listview);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                searchView.clearFocus();
+                Carpark selected = (Carpark) parent.getItemAtPosition(position);
+                notification.setCarpark(selected);
+                dialog.dismiss();
+            }
+        });
+
+        // display the pop up
+        dialogBuilder.setView(v);
+        dialog = dialogBuilder.create();
+        dialog.show();
+    }
+
+    private void navigateToNotifActivity(){
+        Intent intent = new Intent(EditActivity.this, NotificationActivity.class);
+        startActivity(intent);
     }
 }

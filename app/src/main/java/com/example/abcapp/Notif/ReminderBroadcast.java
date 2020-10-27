@@ -15,7 +15,7 @@ public class ReminderBroadcast extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         // Create an Intent for the activity you want to start
-        Intent openIntent = new Intent(context, NotifActivity.class);
+        Intent openIntent = new Intent(context, NotificationActivity.class);
 
         int id = intent.getIntExtra("notif_id", 0);
         String name = intent.getStringExtra("notif_name");

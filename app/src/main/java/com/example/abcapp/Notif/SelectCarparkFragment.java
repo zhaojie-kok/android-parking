@@ -5,8 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Filter;
-import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.SearchView;
 
@@ -19,8 +17,6 @@ import com.android.volley.toolbox.Volley;
 import com.example.abcapp.APICaller;
 import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
-import com.example.abcapp.Notif.CarparkAdapter;
-import com.example.abcapp.Notif.Notification;
 import com.example.abcapp.R;
 
 import java.util.ArrayList;
@@ -30,7 +26,7 @@ public class SelectCarparkFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_carpark, container, false);
+        View v = inflater.inflate(R.layout.select_carpark_popup, container, false);
         displayCarparkList(v);
         return v;
     }
@@ -76,7 +72,7 @@ public class SelectCarparkFragment extends Fragment {
                 Bundle bundle = new Bundle();
                 notification.setCarpark(selected);
                 bundle.putSerializable("notif", notification);
-                Navigation.findNavController(v).navigate(R.id.action_carpark_fragment_to_editFragment, bundle);
+                //Navigation.findNavController(v).navigate(R.id.action_carpark_fragment_to_editFragment, bundle);
             }
         });
 
