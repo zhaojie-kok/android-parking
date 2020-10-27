@@ -35,23 +35,16 @@ public class NotificationAdapter extends ArrayAdapter<Notification> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_notif, parent, false);
         }
 
-        Switch s = convertView.findViewById(R.id.notif_switch);
+        final Switch s = convertView.findViewById(R.id.notif_switch);
         s.setChecked(notification.isEnabled());
         s.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
+                if (NotificationManager.checkNotificationCal(notification)){
                     notification.toggleEnabled();
-                    updateAlarm(notification);
-                    File file = new File(getContext().getApplicationContext().getFilesDir(), notification.getName());
-                    FileOutputStream fo = new FileOutputStream(file, false);
-                    ObjectOutputStream os = new ObjectOutputStream(fo);
-                    os.writeObject(notification);
-                    os.close();
-                    fo.close();
-                } catch (Throwable t) {
-                    Toast.makeText(getContext(), "Exception: " + t.toString(), Toast.LENGTH_LONG).show();
+                    NotificationManager.saveNotification(notification, notification.getName());
                 }
+                s.setChecked(notification.isEnabled());
             }
         });
         TextView t_name = convertView.findViewById(R.id.notif_name);
@@ -59,7 +52,7 @@ public class NotificationAdapter extends ArrayAdapter<Notification> {
 
         Calendar calendar = notification.getCalendar();
         String time = "" + String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY)) + ":" + String.format("%02d", calendar.get(Calendar.MINUTE));
-        String date = getDateString(calendar.get(Calendar.DAY_OF_WEEK),
+        String date = NotificationManager.formatDateString(calendar.get(Calendar.DAY_OF_WEEK),
                 calendar.get(Calendar.DAY_OF_MONTH),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.YEAR));
@@ -70,54 +63,6 @@ public class NotificationAdapter extends ArrayAdapter<Notification> {
         t_time.setText(time);
 
         return convertView;
-    }
-
-    private void updateAlarm(Notification notification){
-        Intent intent = new Intent(getContext(), ReminderBroadcast.class);
-        intent.putExtra("notif_id", notification.getId());
-        intent.putExtra("notif_name", notification.getName());
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), notification.getId(), intent, 0);
-        AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
-
-        boolean alarmUp = notification.isEnabled();
-
-        if (!alarmUp){
-            alarmManager.cancel(pendingIntent);
-            pendingIntent.cancel();
-
-            Toast.makeText(getContext(), "Notification cancelled!", Toast.LENGTH_SHORT).show();
-        }
-        else{
-            alarmManager.set(AlarmManager.RTC_WAKEUP,
-                    notification.getCalendar().getTimeInMillis(),
-                    pendingIntent);
-
-            Toast.makeText(getContext(), "Notification enabled!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private String getDateString(int dW, int d, int m, int y){
-        String extra = "";
-        Calendar now = Calendar.getInstance();
-        if (d == now.get(Calendar.DAY_OF_MONTH) &&
-                m == now.get(Calendar.MONTH) &&
-                y == now.get(Calendar.YEAR)){
-            extra = "Today - ";
-        }
-        else {
-            now.add(Calendar.DATE, 1);
-            if (d == now.get(Calendar.DAY_OF_MONTH) &&
-                    m == now.get(Calendar.MONTH) &&
-                    y == now.get(Calendar.YEAR)){
-                extra = "Tomorrow - ";
-            }
-        }
-        extra += new String[]{"Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"}[dW - 1];
-
-        return extra + " " + d + " " +
-                new String[]{"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
-                        "Jul ", "Aug ", "Oct ", "Nov ", "Dec "}[m - 1] +
-                "\'" + y%100;
     }
 }
 

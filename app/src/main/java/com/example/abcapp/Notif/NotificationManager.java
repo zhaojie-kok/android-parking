@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.os.Build;
 import android.widget.Toast;
 
+import com.example.abcapp.Carparks.Carpark;
+import com.example.abcapp.Carparks.CarparkList;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,7 +20,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 
 public class NotificationManager {
     @SuppressLint("StaticFieldLeak")
@@ -55,9 +60,17 @@ public class NotificationManager {
 
     protected static Notification createNotification(int id){
         Calendar now = Calendar.getInstance();
+        now.set(Calendar.SECOND, 0);
         Notification created = new Notification("Untitled "+
                 new SimpleDateFormat("dd-MM-yy-HH:mm:ss").format(now.getTime()), id, now);
         return created;
+    }
+
+    protected static Notification updateNotification(Notification notification){
+        if (notification.isEnabled() && !checkNotificationCal(notification)){
+            notification.toggleEnabled();
+        }
+        return notification;
     }
 
     protected static void deleteNotification(String fileName){
@@ -65,9 +78,21 @@ public class NotificationManager {
         file.delete();
     }
 
+    protected static boolean checkNotificationCal(Notification notification){
+        // Check if notification calendar is in the future, else return false
+        if (notification.getCalendar().getTimeInMillis() < Calendar.getInstance().getTimeInMillis()){
+            return false;
+        }
+        return true;
+    }
+
     protected static boolean saveNotification(Notification notification,
                                               String original_name
                                               ){
+        if (!checkNotificationCal(notification)){
+            Toast.makeText(activity, "Cannot set alarm in the past", Toast.LENGTH_LONG).show();
+            return false;
+        }
         deleteAlarm(notification);
 
         // If no title, default to "Untitled" or original name, and update notification name
@@ -143,8 +168,39 @@ public class NotificationManager {
                 notification.getCalendar().getTimeInMillis(),
                 pendingIntent);
     }
+    protected static String formatDateString(int dW, int d, int m, int y){
+        String extra = "";
+        Calendar now = Calendar.getInstance();
+        if (d == now.get(Calendar.DAY_OF_MONTH) &&
+                m == now.get(Calendar.MONTH) &&
+                y == now.get(Calendar.YEAR)){
+            extra = "Today - ";
+        }
+        else {
+            now.add(Calendar.DATE, 1);
+            if (d == now.get(Calendar.DAY_OF_MONTH) &&
+                    m == now.get(Calendar.MONTH) &&
+                    y == now.get(Calendar.YEAR)){
+                extra = "Tomorrow - ";
+            }
+        }
+        extra += new String[]{"Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"}[dW - 1];
 
-    public static void setContext(){
+        return extra + " " + d + " " +
+                new String[]{"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
+                        "Jul ", "Aug ", "Oct ", "Nov ", "Dec "}[m - 1] +
+                "'" + y%100;
+    }
 
+    protected static ArrayList<Carpark> getCarparkList(){
+        ArrayList<Carpark> list = new ArrayList<>();
+        try {
+            HashMap hashMap = CarparkList.getCarparks();
+            list = new ArrayList<Carpark>(hashMap.values());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

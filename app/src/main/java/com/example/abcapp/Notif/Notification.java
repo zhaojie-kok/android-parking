@@ -19,7 +19,6 @@ public class Notification implements Serializable {
         this.calendar = calendar;
     }
 
-
     public void setName(String name){
         this.name = name;
     }
