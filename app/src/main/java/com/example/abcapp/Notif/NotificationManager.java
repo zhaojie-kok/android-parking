@@ -143,4 +143,8 @@ public class NotificationManager {
                 notification.getCalendar().getTimeInMillis(),
                 pendingIntent);
     }
+
+    public static void setContext(){
+
+    }
 }

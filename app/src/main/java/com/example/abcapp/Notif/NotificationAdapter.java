@@ -23,8 +23,8 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class NotifAdapter extends ArrayAdapter<Notification> {
-    public NotifAdapter(Context context, ArrayList<Notification> notifications) {
+public class NotificationAdapter extends ArrayAdapter<Notification> {
+    public NotificationAdapter(Context context, ArrayList<Notification> notifications) {
         super(context,  0, notifications);
     }
 
