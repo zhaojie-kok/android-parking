@@ -20,14 +20,10 @@ import android.widget.SearchView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
-import com.example.abcapp.APICaller;
 import com.example.abcapp.Carparks.Carpark;
 import com.example.abcapp.Carparks.CarparkList;
 import com.example.abcapp.R;
@@ -44,7 +40,7 @@ public class EditActivity extends AppCompatActivity {
 
     private String original_name;
     private Notification notification;
-    Dialog dialog;
+    private Dialog dialog;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +103,7 @@ public class EditActivity extends AppCompatActivity {
         if (arrival != null){
             String str_arrival_time = String.format("%02d", arrival.get(Calendar.HOUR_OF_DAY)) + ":" + String.format("%02d", arrival.get(Calendar.MINUTE));
             arrival_time.setText(str_arrival_time);
-            arrival_date.setText(formatDateString(arrival.get(Calendar.DAY_OF_WEEK),
+            arrival_date.setText(NotificationManager.formatDateString(arrival.get(Calendar.DAY_OF_WEEK),
                     arrival.get(Calendar.DAY_OF_MONTH),
                     arrival.get(Calendar.MONTH),
                     arrival.get(Calendar.YEAR)));
@@ -116,24 +112,24 @@ public class EditActivity extends AppCompatActivity {
 
         // Set dateTxt picker
         final TextView dateTxt = v.findViewById(R.id.date);
-        dateTxt.setText(formatDateString(cDayOfWeek, cDay, cMonth, cYear));
+        dateTxt.setText(NotificationManager.formatDateString(cDayOfWeek, cDay, cMonth, cYear));
         dateTxt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Get Current Date
-                DatePickerDialog datePickerDialog = new DatePickerDialog(EditActivity.this,
-                        new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onClick(View view) {
+                        // Get Current Date
+                        DatePickerDialog datePickerDialog = new DatePickerDialog(EditActivity.this,
+                                new DatePickerDialog.OnDateSetListener() {
 
-                            @Override
-                            public void onDateSet(DatePicker view, int year,
-                                                  int monthOfYear, int dayOfMonth) {
-                                GregorianCalendar cal = new GregorianCalendar(year, monthOfYear, dayOfMonth);
-                                dateTxt.setText(formatDateString(cal.get(Calendar.DAY_OF_WEEK), dayOfMonth, monthOfYear, year));
-                                notification.setCalendar(cal);
+                                    @Override
+                                    public void onDateSet(DatePicker view, int year,
+                                                          int monthOfYear, int dayOfMonth) {
+                                        GregorianCalendar cal = new GregorianCalendar(year, monthOfYear, dayOfMonth);
+                                        dateTxt.setText(NotificationManager.formatDateString(cal.get(Calendar.DAY_OF_WEEK), dayOfMonth, monthOfYear, year));
+                                        notification.setCalendar(cal);
 
-                                updateRate(arrival_calculated);
-                            }
-                        }, cYear, cMonth, cDay);
+                                        updateRate(arrival_calculated);
+                                    }
+                                }, cYear, cMonth, cDay);
                 datePickerDialog.show();
             }
         });
@@ -199,7 +195,7 @@ public class EditActivity extends AppCompatActivity {
 
                                 String str_arrival_time = String.format("%02d", arrival.get(Calendar.HOUR_OF_DAY)) + ":" + String.format("%02d", arrival.get(Calendar.MINUTE));
                                 arrival_time.setText(str_arrival_time);
-                                arrival_date.setText(formatDateString(arrival.get(arrival.DAY_OF_WEEK),
+                                arrival_date.setText(NotificationManager.formatDateString(arrival.get(arrival.DAY_OF_WEEK),
                                         arrival.get(Calendar.DAY_OF_MONTH),
                                         arrival.get(Calendar.MONTH),
                                         arrival.get(Calendar.YEAR)));
@@ -223,8 +219,7 @@ public class EditActivity extends AppCompatActivity {
                         alertDialog.show();
                         break;
                     case R.id.location_layout:
-                        CarparkAdapter adapter = new CarparkAdapter(EditActivity.this, getCarparkList());
-                        showSelectCarparkPopup(adapter);
+                        showSelectCarparkPopup();
                         if (notification.getCarpark()!=null){
                             TextView carparkTextView = v.findViewById(R.id.location_input);
                             carparkTextView.setText(notification.getCarparkName());
@@ -237,7 +232,7 @@ public class EditActivity extends AppCompatActivity {
                                 if (which == DialogInterface.BUTTON_POSITIVE){
                                     NotificationManager.deleteAlarm(notification);
                                     NotificationManager.deleteNotification(original_name);
-                                    navigateToNotifActivity();
+                                    navigateToNotificationActivity();
                                 }
                             }
                         };
@@ -251,7 +246,7 @@ public class EditActivity extends AppCompatActivity {
                             break;
                         };
                     default:
-                        navigateToNotifActivity();
+                        navigateToNotificationActivity();
                 }
             }
         };
@@ -292,43 +287,8 @@ public class EditActivity extends AppCompatActivity {
         rateTextView.setText(diff_text);
     }
 
-    private String formatDateString(int dW, int d, int m, int y){
-        String extra = "";
-        Calendar now = Calendar.getInstance();
-        if (d == now.get(Calendar.DAY_OF_MONTH) &&
-                m == now.get(Calendar.MONTH) &&
-                y == now.get(Calendar.YEAR)){
-            extra = "Today - ";
-        }
-        else {
-            now.add(Calendar.DATE, 1);
-            if (d == now.get(Calendar.DAY_OF_MONTH) &&
-                    m == now.get(Calendar.MONTH) &&
-                    y == now.get(Calendar.YEAR)){
-                extra = "Tomorrow - ";
-            }
-        }
-        extra += new String[]{"Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"}[dW - 1];
-
-        return extra + " " + d + " " +
-                new String[]{"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
-                "Jul ", "Aug ", "Oct ", "Nov ", "Dec "}[m - 1] +
-                y;
-    }
-
-    private ArrayList<Carpark> getCarparkList(){
-        ArrayList<Carpark> list = new ArrayList<>();
-        try {
-            HashMap hashMap = CarparkList.getCarparks();
-            list = new ArrayList<Carpark>(hashMap.values());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    private void showSelectCarparkPopup(final CarparkAdapter adapter) {
+    private void showSelectCarparkPopup() {
+        final CarparkAdapter adapter = new CarparkAdapter(EditActivity.this, NotificationManager.getCarparkList());
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
         final View v = getLayoutInflater().inflate(R.layout.select_carpark_popup, null, false);
 
@@ -365,7 +325,7 @@ public class EditActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void navigateToNotifActivity(){
+    private void navigateToNotificationActivity(){
         Intent intent = new Intent(EditActivity.this, NotificationActivity.class);
         startActivity(intent);
     }

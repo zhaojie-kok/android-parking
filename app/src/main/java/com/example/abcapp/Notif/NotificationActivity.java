@@ -83,6 +83,7 @@ public class NotificationActivity extends AppCompatActivity {
             theFile = files[f];
             try{
                 Notification notification = NotificationManager.loadNotif(theFile);
+                notification = NotificationManager.updateNotification(notification);
                 notificationsList.add(notification);
                 notificationsIDList.add(notification.getId());
             } catch (IOException e) {
