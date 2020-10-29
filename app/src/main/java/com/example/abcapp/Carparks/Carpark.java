@@ -1,5 +1,6 @@
 package com.example.abcapp.Carparks;
 
+import com.example.abcapp.ABCLocation;
 import com.example.abcapp.ABCMarker;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -19,19 +20,17 @@ import java.util.Arrays;
 import libraries.qxcg.LatLonCoordinate;
 import libraries.qxcg.SVY21Coordinate;
 
-public class Carpark implements Serializable {
-    private String address;
-    private String carparkNo;
-    private double rate;
-    private String carparkType;
-    private transient LatLng coordinates;
+public class Carpark implements Serializable, ABCLocation{
+    protected String address;
+    protected String carparkNo;
+    protected double rate;
+    protected String carparkType;
+    protected transient LatLng coordinates;
     public transient int capacity = -1;
     public transient int availability = -1;
-    private transient ABCMarker abcMarker;
+    protected transient ABCMarker abcMarker;
 
-
-    // Constructor for creating a carpark from a JSONObject
-    public Carpark(JSONObject carparkJSON) throws JSONException {
+    public Carpark(JSONObject carparkJSON) throws JSONException{
         this.carparkType = carparkJSON.getString("car_park_type");
         this.address = carparkJSON.getString("address");
         this.carparkNo = carparkJSON.getString("car_park_no");
@@ -80,7 +79,6 @@ public class Carpark implements Serializable {
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
         this.abcMarker = new ABCMarker(markerOptions, this.address, null);
     }
-
     /* accessors */
     public String getCarparkNo() {
         return this.carparkNo;
