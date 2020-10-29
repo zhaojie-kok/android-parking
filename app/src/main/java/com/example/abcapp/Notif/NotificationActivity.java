@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -11,6 +13,8 @@ import androidx.appcompat.widget.Toolbar;
 import com.example.abcapp.MapsActivity;
 import com.example.abcapp.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,7 +92,6 @@ public class NotificationActivity extends AppCompatActivity {
                 notificationsIDList.add(notification.getId());
             } catch (IOException e) {
                 e.printStackTrace();
-                break;
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }

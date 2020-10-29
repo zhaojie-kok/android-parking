@@ -1,6 +1,7 @@
 package com.example.abcapp;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -17,10 +18,12 @@ public class ABCMarker {
     private String description = null;
     private Place place = null;
 
-    public ABCMarker(MarkerOptions m, String desc, Place p) {
-        this.markerOptions = m;
-        this.description = desc;
-        this.place = p;
+    public ABCMarker(ABCLocation abcLocation) {
+        this.markerOptions = new MarkerOptions()
+                .position(abcLocation.getCoordinates())
+                .title(abcLocation.getAddress())
+                .snippet(abcLocation.getSnippet())
+                .icon(BitmapDescriptorFactory.defaultMarker(abcLocation.getMarkerColor()));
     }
 
     public void showMarker(GoogleMap mMap) {

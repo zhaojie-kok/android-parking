@@ -389,7 +389,7 @@ public class MapController {
     // mutator method for chosenCarpark
     public static void chooseCarpark(String choice) {
         MapController.chosenCarpark = choice;
-        MapController.chosenCarparkMarker = CarparkList.getCarpark(choice).getAbcMarker();
+        MapController.chosenCarparkMarker = new ABCMarker(CarparkList.getCarpark(choice));
     }
 
     // accessor method for chosenCarpark
@@ -432,7 +432,7 @@ public class MapController {
         // add nearby carparks that have not been shown into the shownCarparks ArrayList
         for (String nearbyCarpark: nearbyCarparks) {
             if (!this.shownCarparks.containsKey(nearbyCarpark)) {
-                this.shownCarparks.put(nearbyCarpark, CarparkList.getCarpark(nearbyCarpark).getAbcMarker());
+                this.shownCarparks.put(nearbyCarpark, new ABCMarker(CarparkList.getCarpark(nearbyCarpark)));
                 this.shownCarparks.get(nearbyCarpark).showMarker(mMap);
             }
         }

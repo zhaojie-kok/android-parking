@@ -61,7 +61,7 @@ public class CarparkList {
     }
 
     // method to read a CSV
-    private ArrayList readCSV(int resourceId, String seperator) throws IOException {
+    private ArrayList readCSV(int resourceId, String separator) throws IOException {
         ArrayList<String[]> output = new ArrayList<String[]>();
 
         // create an InputStream and BufferedReader to read the file
@@ -75,7 +75,7 @@ public class CarparkList {
         String[] currEntries = null;
         while ((currLine = reader.readLine()) != null) {
             // first separate each line by commas
-            currEntries = currLine.split(seperator);
+            currEntries = currLine.split(separator);
 
             // throw the data into the output ArrayList
             output.add(currEntries);

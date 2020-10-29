@@ -21,14 +21,14 @@ import libraries.qxcg.LatLonCoordinate;
 import libraries.qxcg.SVY21Coordinate;
 
 public class Carpark implements Serializable, ABCLocation{
-    protected String address;
-    protected String carparkNo;
-    protected double rate;
-    protected String carparkType;
-    protected transient LatLng coordinates;
+    private String address;
+    private String carparkNo;
+    private double rate;
+    private String carparkType;
+    private transient LatLng coordinates;
     public transient int capacity = -1;
     public transient int availability = -1;
-    protected transient ABCMarker abcMarker;
+    private transient String snippet = "Carpark information unavailable";
 
     public Carpark(JSONObject carparkJSON) throws JSONException{
         this.carparkType = carparkJSON.getString("car_park_type");
@@ -69,25 +69,19 @@ public class Carpark implements Serializable, ABCLocation{
         float y_coord = Float.parseFloat(carparkJSON.getString("y_coord"));
         LatLonCoordinate latlon_coord = new SVY21Coordinate(y_coord, x_coord).asLatLon();
         this.coordinates = new LatLng(latlon_coord.getLatitude(), latlon_coord.getLongitude());
-
-        // instantiate the marker and create the abcMarker for the carker
-        // the ABC marker will be used to interface with the map
-        MarkerOptions markerOptions = new MarkerOptions()
-                .position(this.coordinates)
-                .title(this.address)
-                .snippet("Carpark Information Unavailable")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
-        this.abcMarker = new ABCMarker(markerOptions, this.address, null);
     }
     /* accessors */
+    // method to access the carpark number eg "ACB"
     public String getCarparkNo() {
         return this.carparkNo;
     }
 
+    // method to access the coordinates
     public LatLng getCoordinates() {
         return this.coordinates;
     }
 
+    // method to access the carpark type
     public String getAddress() {
         return this.address;
     }
@@ -104,16 +98,37 @@ public class Carpark implements Serializable, ABCLocation{
     /* accessors */
 
     // method to update the number of lots available and total number of lots
-    public void updateAvailability(int lotsAvail, int totalCapacity, GoogleMap mMap) {
+    public void updateAvailability(int lotsAvail, int totalCapacity) {
         this.capacity = totalCapacity;
         this.availability = lotsAvail;
 
         // update the ABCMarker to reflect the carpark availability
-        String newInfo = String.format("rate:$%.2f ", this.rate) + " lots available: " + lotsAvail + ", total capacity: " + totalCapacity;
-        this.abcMarker.updateMarker(
-                this.abcMarker.getMarkerOptions().snippet(newInfo),
-                mMap,
-                this.abcMarker.isShown());
+        snippet = String.format("rate:$%.2f ", this.rate) + " lots available: " + lotsAvail + ", total capacity: " + totalCapacity;
+    }
+
+    // method to access the carpark type
+    public String getCarparkType() {
+        return this.carparkType;
+    }
+
+    // method to access the parking rate
+    public double getRate(){
+        return this.rate;
+    }
+
+    // implement getMarkerColor, default all carparks to violet
+    public float getMarkerColor(){
+        return BitmapDescriptorFactory.HUE_VIOLET;
+    }
+
+    // implement getSnippet method to access snippet (formatted string including lots available, etc)
+    public String getSnippet(){
+        return this.snippet;
+    }
+
+    // toString method for searching
+    public String toString(){
+        return this.getAddress();
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -125,24 +140,5 @@ public class Carpark implements Serializable, ABCLocation{
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         coordinates = new LatLng(in.readDouble(), in.readDouble());
-    }
-
-    // method to access the carpark's ABCMarker
-    public ABCMarker getAbcMarker() {
-        return this.abcMarker;
-    }
-
-    // method to access the carpark type
-    public String getCarparkType() {
-        return this.carparkType;
-    }
-
-    public double getRate(){
-        return this.rate;
-    }
-
-    // toString method for searching
-    public String toString(){
-        return this.getAddress();
     }
 }

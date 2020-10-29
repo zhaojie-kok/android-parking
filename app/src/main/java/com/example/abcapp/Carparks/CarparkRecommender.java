@@ -33,7 +33,7 @@ public class CarparkRecommender {
         // first make the API call to get information about the carpark availabilities (vacancies)
         JSONArray carparkAvails = caller.getCarparkAvailability();
 
-        // iterate through teh carparkAvails
+        // iterate through the carparkAvails
         for (int i=0; i<carparkAvails.length(); i++) {
             String carparkNo = carparkAvails.getJSONObject(i).getString("carpark_number");
 
@@ -52,7 +52,7 @@ public class CarparkRecommender {
                 if (CarparkRecommender.carparkList.getCarpark(carparkNo) == null) {
                     continue;
                 } else {
-                    CarparkRecommender.carparkList.getCarpark(carparkNo).updateAvailability(lotsAvail, totalCapacity, mMap);
+                    CarparkRecommender.carparkList.getCarpark(carparkNo).updateAvailability(lotsAvail, totalCapacity);
                 }
             } catch (Exception e) {
                 System.out.println("|| exception in updating carparks ||");

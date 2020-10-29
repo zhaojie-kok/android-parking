@@ -35,6 +35,8 @@ import java.util.HashMap;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.w3c.dom.Text;
+
 
 public class EditActivity extends AppCompatActivity {
 
@@ -219,11 +221,8 @@ public class EditActivity extends AppCompatActivity {
                         alertDialog.show();
                         break;
                     case R.id.location_layout:
-                        showSelectCarparkPopup();
-                        if (notification.getCarpark()!=null){
-                            TextView carparkTextView = v.findViewById(R.id.location_input);
-                            carparkTextView.setText(notification.getCarparkName());
-                        }
+                        TextView carparkTextView = v.findViewById(R.id.location_input);
+                        showSelectCarparkPopup(carparkTextView);
                         break;
                     case R.id.btn_delete:
                         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -287,7 +286,7 @@ public class EditActivity extends AppCompatActivity {
         rateTextView.setText(diff_text);
     }
 
-    private void showSelectCarparkPopup() {
+    private void showSelectCarparkPopup(final TextView carparkTextView) {
         final CarparkAdapter adapter = new CarparkAdapter(EditActivity.this, NotificationManager.getCarparkList());
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
         final View v = getLayoutInflater().inflate(R.layout.select_carpark_popup, null, false);
@@ -315,6 +314,7 @@ public class EditActivity extends AppCompatActivity {
                 searchView.clearFocus();
                 Carpark selected = (Carpark) parent.getItemAtPosition(position);
                 notification.setCarpark(selected);
+                carparkTextView.setText(notification.getCarparkName());
                 dialog.dismiss();
             }
         });

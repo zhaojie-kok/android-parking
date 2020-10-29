@@ -601,14 +601,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 public void onSuccess(Location location) {
                     if (location != null) {
                         prevLoc = location;
-//                        if (startMarker == null) {
-//                            startMarker = new ABCMarker(
-//                                    new MarkerOptions()
-//                                            .position(new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()))
-//                                            .title("start location")
-//                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)),
-//                                    startText.getText().toString(), null);
-//                        }
+                        if (startMarker == null) {
+                            startMarker = new ABCMarker(new BasicLocation(new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()),
+                                    "start location", BitmapDescriptorFactory.HUE_BLUE));
+                        }
                         if (moveCam) {
                             LatLng prevLatlng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(prevLatlng, 15.0f));
@@ -636,12 +632,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (endMarker != null) {
                     endMarker.removeMarker();
                 }
-                endMarker = new ABCMarker(
-                        new MarkerOptions()
-                                .position(pos)
-                                .title(name)
-                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)),
-                        endText.getText().toString(), place);
+                endMarker = new ABCMarker(new BasicLocation(pos, name, BitmapDescriptorFactory.HUE_RED));
                 endMarker.showMarker(mMap);
 
                 // focus the display on only the end point if start point doesnt exist or is not shown
@@ -664,12 +655,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     startMarker.removeMarker();
                 }
 
-                startMarker = new ABCMarker(
-                        new MarkerOptions()
-                                .position(pos)
-                                .title(name)
-                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)),
-                        startText.getText().toString(), place);
+                startMarker = new ABCMarker(new BasicLocation(pos, name, BitmapDescriptorFactory.HUE_BLUE));
                 startMarker.showMarker(mMap);
 
                 // focus the display on only the start point if endpoint doesnt exist or is not shown
@@ -823,7 +809,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             carparkMarker.removeMarker();
                         }
                         MapController.chooseCarpark(recommendations.get(i));
-                        MapsActivity.carparkMarker = CarparkList.getCarpark(recommendations.get(i)).getAbcMarker();
+                        MapsActivity.carparkMarker = new ABCMarker(CarparkList.getCarpark(recommendations.get(i)));
                         chooseCarpark.setText(CarparkList.getCarpark(recommendations.get(i)).getAddress());
                         MapsActivity.this.runOnUiThread(new Runnable() {
                             @Override
