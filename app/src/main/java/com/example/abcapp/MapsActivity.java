@@ -80,15 +80,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // objects and attributes meant for items to be checked periodically e.g: weather, traffic, carpark
     private Handler handler;
-    private int checkingInterval = 5000; //1000*60*5; // set to check every 5 mins
+    private int checkingInterval = 5000; // set to check every 5 secs
     private Runnable statusChecker = new Runnable() {
         @Override
         public void run() {
             try {
                 // add all periodic checking methods here
                 getUserLocation(false);
-                mapController.updateWeather();
-                mapController.updateTraffic();
+                mapController.updateInfo();
                 carparkRecommender.updateCarparks(mMap);
                 updateNavigationInstructions(false);
                 if (carparksShown) {

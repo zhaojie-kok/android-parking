@@ -81,6 +81,12 @@ public class MapController {
         }).start();
     }
 
+    // method to update all info at one go
+    public void updateInfo() throws Exception{
+        updateTraffic();
+        updateWeather();
+    }
+
     /* routes and traffic methods */
     // update traffic conditions (to be run asynchronously)
     public void updateTraffic() throws InterruptedException, JSONException {
