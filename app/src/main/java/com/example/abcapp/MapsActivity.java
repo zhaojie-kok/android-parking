@@ -156,6 +156,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        startMarker = null;
+        endMarker = null;
+        carparkMarker = null;
+
         /* make request queue and API caller for http API calls */
         requestQueue = Volley.newRequestQueue(this);
         final APICaller caller = new APICaller(requestQueue);
