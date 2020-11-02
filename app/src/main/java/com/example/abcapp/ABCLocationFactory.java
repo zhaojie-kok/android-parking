@@ -12,11 +12,11 @@ public class ABCLocationFactory {
         ABCLocation abcLocation = null;
         if (type == START){
             // If start, provide pos: LatLng and name: String
-            abcLocation =  new BasicLocation((LatLng)o[0], (String)o[1], BitmapDescriptorFactory.HUE_RED);
+            abcLocation =  new BasicLocation((LatLng)o[0], (String)o[1], BitmapDescriptorFactory.HUE_BLUE);
         }
         else if (type == END){
             // If end, provide pos: LatLng and name: String
-            abcLocation =  new BasicLocation((LatLng)o[0], (String)o[1], BitmapDescriptorFactory.HUE_BLUE);
+            abcLocation =  new BasicLocation((LatLng)o[0], (String)o[1], BitmapDescriptorFactory.HUE_RED);
         }
         else if (type == CARPARK){
             // If carpark, provide  carpark: Carpark
