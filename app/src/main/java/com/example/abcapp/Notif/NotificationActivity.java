@@ -64,6 +64,7 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void displayNotifications(ListView listView){
+        // Use NotificationAdapter to set listview
         NotificationAdapter adapter = new NotificationAdapter(this, notificationsList);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -80,14 +81,17 @@ public class NotificationActivity extends AppCompatActivity {
         File[] files = directory.listFiles();
         File theFile;
 
+        // Clear the array lists
         notificationsIDList.clear();
         notificationsList.clear();
 
         for (int f = 0; f < files.length; f++) {
             theFile = files[f];
             try{
+                // Load notification with NotificationManager
                 Notification notification = NotificationManager.loadNotif(theFile);
                 notification = NotificationManager.updateNotification(notification);
+                // Add them to the array lists
                 notificationsList.add(notification);
                 notificationsIDList.add(notification.getId());
             } catch (IOException e) {
