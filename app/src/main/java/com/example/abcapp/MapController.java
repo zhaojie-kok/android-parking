@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -421,14 +422,19 @@ public class MapController {
     public void showNearbyCarparks(LatLng pos, CarparkRecommender carparkRecommender, GoogleMap mMap) {
         // first get a list of nearbyCarparks
         ArrayList<String> nearbyCarparks = carparkRecommender.findNearbyCarparks(pos);
+        ArrayList<String> keysToRemove = new ArrayList<>();
 
         // next check which carparks from the existing shown carparks need to be removed
         for (Map.Entry<String, ABCMarker> shownCarpark: this.shownCarparks.entrySet()) {
             // if there exists a shown carpark that is not in the current nearby list, remove it
             if (!nearbyCarparks.contains(shownCarpark.getKey())) {
                 shownCarpark.getValue().removeMarker();
-                shownCarparks.remove(shownCarpark.getKey());
+                keysToRemove.add(shownCarpark.getKey());
             }
+        }
+
+        for (String key: keysToRemove){
+            shownCarparks.remove(key);
         }
 
         // add nearby carparks that have not been shown into the shownCarparks ArrayList
