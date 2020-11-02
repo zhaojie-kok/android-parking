@@ -18,7 +18,8 @@ public class ABCMarker {
     private String description = null;
     private Place place = null;
 
-    public ABCMarker(ABCLocation abcLocation) {
+    public ABCMarker(Object[] o, int type) {
+        ABCLocation abcLocation = ABCLocationFactory.getABCLocation(o, type);
         this.markerOptions = new MarkerOptions()
                 .position(abcLocation.getCoordinates())
                 .title(abcLocation.getAddress())

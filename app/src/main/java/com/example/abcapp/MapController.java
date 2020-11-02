@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -395,7 +396,9 @@ public class MapController {
     // mutator method for chosenCarpark
     public static void chooseCarpark(String choice) {
         MapController.chosenCarpark = choice;
-        MapController.chosenCarparkMarker = new ABCMarker(CarparkList.getCarpark(choice));
+        Object[] tempObj = new Object[1];
+        tempObj[0] = CarparkList.getCarpark(choice);
+        MapController.chosenCarparkMarker = new ABCMarker(tempObj, ABCLocationFactory.CARPARK);
     }
 
     // accessor method for chosenCarpark
@@ -425,20 +428,27 @@ public class MapController {
     public void showNearbyCarparks(LatLng pos, CarparkRecommender carparkRecommender, GoogleMap mMap) {
         // first get a list of nearbyCarparks
         ArrayList<String> nearbyCarparks = carparkRecommender.findNearbyCarparks(pos);
+        ArrayList<String> keysToRemove = new ArrayList<>();
 
         // next check which carparks from the existing shown carparks need to be removed
         for (Map.Entry<String, ABCMarker> shownCarpark: this.shownCarparks.entrySet()) {
             // if there exists a shown carpark that is not in the current nearby list, remove it
             if (!nearbyCarparks.contains(shownCarpark.getKey())) {
                 shownCarpark.getValue().removeMarker();
-                shownCarparks.remove(shownCarpark.getKey());
+                keysToRemove.add(shownCarpark.getKey());
             }
+        }
+
+        for (String key: keysToRemove){
+            shownCarparks.remove(key);
         }
 
         // add nearby carparks that have not been shown into the shownCarparks ArrayList
         for (String nearbyCarpark: nearbyCarparks) {
             if (!this.shownCarparks.containsKey(nearbyCarpark)) {
-                this.shownCarparks.put(nearbyCarpark, new ABCMarker(CarparkList.getCarpark(nearbyCarpark)));
+                Object[] tempObj = new Object[1];
+                tempObj[0] = CarparkList.getCarpark(nearbyCarpark);
+                this.shownCarparks.put(nearbyCarpark, new ABCMarker(tempObj, ABCLocationFactory.CARPARK));
                 this.shownCarparks.get(nearbyCarpark).showMarker(mMap);
             }
         }

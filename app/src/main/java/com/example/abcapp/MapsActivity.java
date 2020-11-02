@@ -155,6 +155,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        startMarker = null;
+        endMarker = null;
+        carparkMarker = null;
+
         /* make request queue and API caller for http API calls */
         requestQueue = Volley.newRequestQueue(this);
         final APICaller caller = new APICaller(requestQueue);
@@ -601,8 +605,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (location != null) {
                         prevLoc = location;
                         if (startMarker == null) {
-                            startMarker = new ABCMarker(new BasicLocation(new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude()),
-                                    "start location", BitmapDescriptorFactory.HUE_BLUE));
+                            Object[] tempObj = new Object[2];
+                            tempObj[0] = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
+                            tempObj[1] = "start location";
+                            startMarker = new ABCMarker(tempObj, ABCLocationFactory.START);
                         }
                         if (moveCam) {
                             LatLng prevLatlng = new LatLng(prevLoc.getLatitude(), prevLoc.getLongitude());
@@ -631,7 +637,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (endMarker != null) {
                     endMarker.removeMarker();
                 }
-                endMarker = new ABCMarker(new BasicLocation(pos, name, BitmapDescriptorFactory.HUE_RED));
+                Object[] tempObj = new Object[2];
+                tempObj[0] = pos;
+                tempObj[1] = name;
+                endMarker = new ABCMarker(tempObj, ABCLocationFactory.END);
                 endMarker.showMarker(mMap);
 
                 // focus the display on only the end point if start point doesnt exist or is not shown
@@ -653,8 +662,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (startMarker != null) {
                     startMarker.removeMarker();
                 }
-
-                startMarker = new ABCMarker(new BasicLocation(pos, name, BitmapDescriptorFactory.HUE_BLUE));
+                Object[] tempObj = new Object[2];
+                tempObj[0] = pos;
+                tempObj[1] = name;
+                startMarker = new ABCMarker(tempObj, ABCLocationFactory.START);
                 startMarker.showMarker(mMap);
 
                 // focus the display on only the start point if endpoint doesnt exist or is not shown
@@ -808,7 +819,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             carparkMarker.removeMarker();
                         }
                         MapController.chooseCarpark(recommendations.get(i));
-                        MapsActivity.carparkMarker = new ABCMarker(CarparkList.getCarpark(recommendations.get(i)));
+                        Object[] tempObj = new Object[1];
+                        tempObj[0] = CarparkList.getCarpark(recommendations.get(i));
+                        MapsActivity.carparkMarker = new ABCMarker(tempObj, ABCLocationFactory.CARPARK);
                         chooseCarpark.setText(CarparkList.getCarpark(recommendations.get(i)).getAddress());
                         MapsActivity.this.runOnUiThread(new Runnable() {
                             @Override
@@ -889,7 +902,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (directionBox.getText().equals(getResources().getText(R.string.directionBoxDefault))) {
                 directionBox.setText("Click to view directions");
             } else {
-                Toast.makeText(this, "Please return to the route", Toast.LENGTH_SHORT).show();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MapsActivity.this, "Please return to the route", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         } else {
             directionBox.setText(navigationInstructions.get(segmentIndex));
